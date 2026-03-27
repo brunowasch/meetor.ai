@@ -79,9 +79,11 @@ export default function MeetingRoomPage() {
   useEffect(() => {
     if (localVideoRef.current && localStreamRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
       localVideoRef.current.srcObject = localStreamRef.current;
+      localVideoRef.current.play().catch(() => {});
     }
     if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
       remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      remoteVideoRef.current.play().catch(() => {});
     }
   });
 
@@ -148,11 +150,11 @@ export default function MeetingRoomPage() {
   }, []);
 
   // Host starts the call toward the admitted guest
-  const startCall = useCallback(async (targetId?: string) => {
+  const startCall = useCallback(async (targetId?: string, existingStream?: MediaStream) => {
     if (!clientId) return;
     setConnectionState("connecting");
     try {
-      const stream = await startLocalStream();
+      const stream = existingStream || localStreamRef.current || await startLocalStream();
       const pc = createPeer();
       peerRef.current = pc;
       if (targetId) remoteIdRef.current = targetId;
@@ -172,7 +174,7 @@ export default function MeetingRoomPage() {
     async (offerData: { sdp: string; type: RTCSdpType }, fromId: string) => {
       try {
         remoteIdRef.current = fromId;
-        const stream = await startLocalStream();
+        const stream = localStreamRef.current || await startLocalStream();
         const pc = createPeer();
         peerRef.current = pc;
 
@@ -195,10 +197,15 @@ export default function MeetingRoomPage() {
   const admitGuest = useCallback(async (knock: KnockRequest) => {
     setKnockQueue((q) => q.filter((k) => k.fromId !== knock.fromId));
     remoteIdRef.current = knock.fromId;
-    await sendSignal("admit", { admitted: true }, knock.fromId);
-    // Host initiates the WebRTC call toward the guest
-    await startCall(knock.fromId);
-  }, [sendSignal, startCall]);
+    try {
+      const stream = localStreamRef.current || await startLocalStream();
+      await sendSignal("admit", { admitted: true }, knock.fromId);
+      // Host initiates the WebRTC call toward the guest
+      await startCall(knock.fromId, stream);
+    } catch {
+      setError("Falha ao obter câmera para o anfitrião.");
+    }
+  }, [sendSignal, startCall, startLocalStream]);
 
   const denyGuest = useCallback(async (knock: KnockRequest) => {
     setKnockQueue((q) => q.filter((k) => k.fromId !== knock.fromId));
@@ -389,11 +396,16 @@ export default function MeetingRoomPage() {
             Identifique-se para pedir permissão ao anfitrião para entrar na sala.
           </p>
 
-          <form onSubmit={(e) => {
+          <form onSubmit={async (e) => {
             e.preventDefault();
             if (guestName.trim()) {
-              setGuestStatus("waiting");
-              sendSignal("knock", { name: guestName.trim() }, "");
+              try {
+                await startLocalStream();
+                setGuestStatus("waiting");
+                sendSignal("knock", { name: guestName.trim() }, "");
+              } catch (err) {
+                alert("Você precisa permitir a câmera e microfone antes de entrar.");
+              }
             }
           }} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <input 
