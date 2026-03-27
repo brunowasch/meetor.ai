@@ -2,20 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Target, Sparkles } from "lucide-react";
+import { Target, Sparkles, LogIn, X } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [joinLink, setJoinLink] = useState("");
+
+  const handleJoinMeeting = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!joinLink.trim()) return;
+    const url = joinLink.trim();
+    // Extrai o token se for link completo ou usa o próprio texto se for só o token
+    const tokenStr = url.includes("/meeting/") ? url.split("/meeting/")[1].split(/[/?#]/)[0] : url.split(/[/?#]/)[0];
+    router.push(`/meeting/${tokenStr}`);
+  };
 
   const handleCreateMeeting = () => {
     setLoading(true);
-    // Gera um token criptograficamente pseudo-randomico (hash simulado pelo client para evitar Server Action complexity)
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
     const token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     
-    router.push(`/meeting/${token}`);
+    router.push(`/meeting/${token}?host=true`);
   };
 
   return (
@@ -96,21 +106,60 @@ export default function LandingPage() {
             Nenhum cadastro, nenhum download necessário. Crie o seu link único, compartilhe com o convidado e conversem livremente com total privacidade!
           </p>
 
-          <button
-            onClick={handleCreateMeeting}
-            disabled={loading}
-            className="btn btn-primary btn-lg"
-            style={{ fontSize: 20, padding: "16px 40px", borderRadius: 32, boxShadow: "0 8px 20px rgba(37,99,235,0.3)" }}
-          >
-            {loading ? "Gerando Link..." : (
+          <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={handleCreateMeeting}
+              disabled={loading}
+              className="btn btn-primary btn-lg"
+              style={{ fontSize: 18, padding: "16px 32px", borderRadius: 32, boxShadow: "0 8px 20px rgba(37,99,235,0.3)" }}
+            >
+              {loading ? "Gerando Link..." : (
+                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Sparkles size={20} />
+                  Criar Reunião Agora
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setJoinModalOpen(true)}
+              className="btn btn-secondary btn-lg"
+              style={{ fontSize: 18, padding: "16px 32px", borderRadius: 32 }}
+            >
               <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Sparkles size={20} />
-                Criar Reunião Agora
+                <LogIn size={20} />
+                Entrar com Link
               </span>
-            )}
-          </button>
+            </button>
+          </div>
         </div>
       </section>
+
+      {joinModalOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }} className="animate-fade-in">
+          <div style={{ background: "var(--surface)", padding: 32, borderRadius: 24, width: "100%", maxWidth: 460, boxShadow: "0 24px 48px rgba(0,0,0,0.2)", position: "relative" }}>
+            <button onClick={() => setJoinModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+              <X size={24} />
+            </button>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>Entrar em uma Reunião</h2>
+            <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
+              Cole o link compartilhado pelo anfitrião ou o ID da sala para entrar imediatamente.
+            </p>
+            <form onSubmit={handleJoinMeeting} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <input 
+                type="text" 
+                placeholder="Ex: https://.../meeting/abc12345" 
+                value={joinLink}
+                onChange={(e) => setJoinLink(e.target.value)}
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 16, outline: "none" }}
+                autoFocus
+              />
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: 16, borderRadius: 12, fontSize: 16, fontWeight: 600 }}>
+                Entrar na Sala
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
