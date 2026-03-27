@@ -15,6 +15,7 @@ export default function LandingPage() {
     if (!joinLink.trim()) return;
     const url = joinLink.trim();
     // Extrai o token se for link completo ou usa o próprio texto se for só o token
+    // deploy
     const tokenStr = url.includes("/meeting/") ? url.split("/meeting/")[1].split(/[/?#]/)[0] : url.split(/[/?#]/)[0];
     router.push(`/meeting/${tokenStr}`);
   };
