@@ -57,6 +57,7 @@ export default function MeetingRoomPage() {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerRef = useRef<RTCPeerConnection | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const durationRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const remoteIdRef = useRef<string>("");
@@ -73,6 +74,16 @@ export default function MeetingRoomPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // ── Ensure Streams are Attached ────────────────────────────
+  useEffect(() => {
+    if (localVideoRef.current && localStreamRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
+      localVideoRef.current.srcObject = localStreamRef.current;
+    }
+    if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+      remoteVideoRef.current.srcObject = remoteStreamRef.current;
+    }
+  });
 
   // ── Signal helpers ─────────────────────────────────────────
   const sendSignal = useCallback(
@@ -111,8 +122,11 @@ export default function MeetingRoomPage() {
     };
 
     pc.ontrack = (e) => {
-      if (remoteVideoRef.current && e.streams[0]) {
-        remoteVideoRef.current.srcObject = e.streams[0];
+      if (e.streams[0]) {
+        remoteStreamRef.current = e.streams[0];
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = e.streams[0];
+        }
       }
     };
 
@@ -237,6 +251,7 @@ export default function MeetingRoomPage() {
           setConnectionState("disconnected");
           setInCall(false);
           remoteIdRef.current = "";
+          remoteStreamRef.current = null;
           if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
         }
       }
@@ -339,6 +354,7 @@ export default function MeetingRoomPage() {
     setConnectionState("disconnected");
     if (peerRef.current) { peerRef.current.close(); peerRef.current = null; }
     if (localStreamRef.current) { localStreamRef.current.getTracks().forEach((t) => t.stop()); localStreamRef.current = null; }
+    remoteStreamRef.current = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     router.push("/");
   };
