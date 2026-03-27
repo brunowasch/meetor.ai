@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const signalsStore: Record<string, any[]> = {};
 
 export async function POST(
@@ -57,7 +60,13 @@ export async function GET(
       signalsStore[token] = signalsStore[token].filter((s) => !s.consumed);
     }
 
-    return NextResponse.json({ signals: parsed });
+    return NextResponse.json({ signals: parsed }, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, s-maxage=0, must-revalidate",
+        "CDN-Cache-Control": "no-store",
+        "Vercel-CDN-Cache-Control": "no-store",
+      }
+    });
   } catch (err) {
     return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }

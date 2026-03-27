@@ -252,7 +252,13 @@ export default function MeetingRoomPage() {
       if (isPollingRef.current) return;
       isPollingRef.current = true;
       try {
-        const res = await fetch(`/api/meetings/${token}/signal?clientId=${clientId}`);
+        const res = await fetch(`/api/meetings/${token}/signal?clientId=${clientId}&t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+          },
+        });
         if (res.ok) {
           const { signals } = await res.json();
           if (signals?.length > 0) await processSignals(signals);
