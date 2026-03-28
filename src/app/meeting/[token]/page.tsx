@@ -37,6 +37,21 @@ const RTC_CONFIG: RTCConfiguration = {
     { urls: "stun:stun1.l.google.com:19302" },
     { urls: "stun:stun2.l.google.com:19302" },
     { urls: "stun:stun.cloudflare.com:3478" },
+    {
+      urls: "turn:openrelay.metered.ca:80",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+    {
+      urls: "turn:openrelay.metered.ca:443",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+    {
+      urls: "turn:openrelay.metered.ca:443?transport=tcp",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
   ],
 };
 
@@ -99,6 +114,7 @@ export default function MeetingRoomPage() {
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const remoteIdRef = useRef("");
+  const candidateBufferRef = useRef<RTCIceCandidateInit[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const durationRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const busyRef = useRef(false); // prevent concurrent poll
@@ -308,6 +324,14 @@ export default function MeetingRoomPage() {
               const d = sig.data as { sdp: string; type: RTCSdpType };
               setGuestStatus("admitted");
               await handleOffer(d.sdp, d.type, sig.fromUser);
+              
+              const newPc = peerRef.current;
+              if (newPc && newPc.remoteDescription) {
+                for (const c of candidateBufferRef.current) {
+                  try { await newPc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+                }
+                candidateBufferRef.current = [];
+              }
             }
             break;
           }
@@ -316,6 +340,13 @@ export default function MeetingRoomPage() {
               remoteIdRef.current = sig.fromUser;
               const d = sig.data as { sdp: string; type: RTCSdpType };
               await pc.setRemoteDescription(new RTCSessionDescription(d));
+              
+              if (pc.remoteDescription) {
+                for (const c of candidateBufferRef.current) {
+                  try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+                }
+                candidateBufferRef.current = [];
+              }
             }
             break;
           }
@@ -324,6 +355,8 @@ export default function MeetingRoomPage() {
               try {
                 await pc.addIceCandidate(new RTCIceCandidate(sig.data as RTCIceCandidateInit));
               } catch { /* ignore */ }
+            } else {
+              candidateBufferRef.current.push(sig.data as RTCIceCandidateInit);
             }
             break;
           }
