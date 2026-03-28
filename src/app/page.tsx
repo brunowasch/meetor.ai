@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Target, Sparkles, LogIn, X } from "lucide-react";
+import { Target, Sparkles, LogIn, X, LogOut, User } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [joinLink, setJoinLink] = useState("");
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("mc_user");
+    if (stored) setCurrentUser(JSON.parse(stored));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("mc_user");
+    setCurrentUser(null);
+  };
 
   const handleJoinMeeting = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -43,7 +54,7 @@ export default function LandingPage() {
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <div className="container" style={{ display: "flex", alignItems: "center", height: 64 }}>
+        <div className="container" style={{ display: "flex", alignItems: "center", height: 64, justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
@@ -57,6 +68,38 @@ export default function LandingPage() {
               <Target size={20} color="white" />
             </div>
             <span style={{ fontSize: 20, fontWeight: 800 }}>MentorConnect <span className="text-gray-400 text-sm">Meet</span></span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {currentUser ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 20, background: "var(--primary-50)", border: "1px solid var(--primary-200)" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <User size={14} color="white" />
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--primary)" }}>
+                    {[currentUser.nome, currentUser.sobrenome].filter(Boolean).join(" ") || currentUser.email}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="btn btn-ghost btn-sm"
+                  style={{ borderRadius: 20, padding: "6px 12px", color: "var(--text-muted)" }}
+                  title="Sair"
+                >
+                  <LogOut size={15} />
+                  Sair
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => router.push('/login')}
+                className="btn btn-secondary btn-sm"
+                style={{ borderRadius: "20px", padding: "8px 16px" }}
+              >
+                <LogIn size={16} />
+                Fazer Login
+              </button>
+            )}
           </div>
         </div>
       </nav>

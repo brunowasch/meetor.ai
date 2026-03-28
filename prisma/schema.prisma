@@ -1,0 +1,380 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model area_interesse {
+  id             Int              @id @default(autoincrement())
+  nome           String?          @unique @db.VarChar(100)
+  padrao         Boolean?         @default(false)
+  uuid           String?          @unique @db.VarChar(36)
+  candidato_area candidato_area[]
+  mentor_area    mentor_area[]
+  vaga_area      vaga_area[]
+}
+
+model candidato {
+  id                     String              @id
+  usuario_id             String              @unique
+  nome                   String?
+  sobrenome              String?
+  data_nascimento        DateTime?
+  pais                   String?
+  descricao              String?             @db.Text
+  estado                 String?
+  cidade                 String?
+  telefone               String?
+  foto_perfil            String?
+  uuid                   String?             @unique @db.VarChar(36)
+  consentimento_parental Boolean?            @default(false)
+  email_responsavel      String?
+  usuario                usuario             @relation(fields: [usuario_id], references: [id])
+  candidato_area         candidato_area[]
+  candidato_arquivo      candidato_arquivo[]
+  candidato_link         candidato_link[]
+  vaga_favorita          vaga_favorita[]
+}
+
+model candidato_area {
+  candidato_id      String
+  area_interesse_id Int
+  area_interesse    area_interesse @relation(fields: [area_interesse_id], references: [id])
+  candidato         candidato      @relation(fields: [candidato_id], references: [id])
+
+  @@id([candidato_id, area_interesse_id])
+  @@index([area_interesse_id], map: "candidato_area_area_interesse_id_fkey")
+}
+
+model candidato_arquivo {
+  id           String    @id
+  candidato_id String
+  nome         String
+  url          String
+  mime         String
+  tamanho      Int
+  criadoEm     DateTime  @default(now())
+  uuid         String?   @unique @db.VarChar(36)
+  candidato    candidato @relation(fields: [candidato_id], references: [id])
+
+  @@index([candidato_id], map: "candidato_arquivo_candidato_id_fkey")
+}
+
+model candidato_link {
+  id           String    @id
+  candidato_id String
+  label        String    @db.VarChar(50)
+  url          String    @db.VarChar(255)
+  ordem        Int       @default(0)
+  uuid         String?   @unique @db.VarChar(36)
+  candidato    candidato @relation(fields: [candidato_id], references: [id], onDelete: Cascade)
+
+  @@index([candidato_id], map: "candidato_link_candidato_id_fkey")
+}
+
+model empresa {
+  id              String            @id
+  usuario_id      String            @unique
+  nome_empresa    String
+  descricao       String?
+  telefone        String?
+  pais            String?
+  estado          String?
+  cidade          String?
+  foto_perfil     String?
+  uuid            String?           @unique @db.VarChar(36)
+  usuario         usuario           @relation(fields: [usuario_id], references: [id])
+  empresa_arquivo empresa_arquivo[]
+  empresa_link    empresa_link[]
+}
+
+model empresa_arquivo {
+  id         String   @id
+  empresa_id String
+  nome       String
+  url        String
+  mime       String?
+  tamanho    Int?
+  criadoEm   DateTime @default(now())
+  uuid       String?  @unique @db.VarChar(36)
+  empresa    empresa  @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  @@index([empresa_id], map: "empresa_arquivo_empresa_id_fkey")
+}
+
+model empresa_link {
+  id         String  @id
+  empresa_id String
+  label      String  @db.VarChar(100)
+  url        String  @db.VarChar(255)
+  ordem      Int     @default(0)
+  uuid       String? @unique @db.VarChar(36)
+  empresa    empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  @@index([empresa_id], map: "empresa_link_empresa_id_fkey")
+}
+
+model entrevista_mentor {
+  id                 String   @id
+  vaga_id            String
+  candidato_id       String
+  mentor_id          String
+  disponibilidade_id String
+  status             String   @default("PENDENTE_CANDIDATO") @db.VarChar(30)
+  data               String   @db.VarChar(10)
+  hora_inicio        String   @db.VarChar(5)
+  hora_fim           String   @db.VarChar(5)
+  criado_em          DateTime @default(now())
+  atualizado_em      DateTime
+  mentor_notificado  Boolean  @default(false)
+
+  @@index([candidato_id])
+  @@index([mentor_id])
+  @@index([vaga_id])
+}
+
+model mentor {
+  id                     String                   @id
+  usuario_id             String                   @unique
+  nome                   String?
+  sobrenome              String?
+  bio                    String?                  @db.Text
+  foto_perfil            String?
+  uuid                   String?                  @unique @db.VarChar(36)
+  cidade                 String?
+  estado                 String?
+  pais                   String?
+  telefone               String?
+  usuario                usuario                  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  mentor_area            mentor_area[]
+  mentor_arquivo         mentor_arquivo[]
+  mentor_disponibilidade mentor_disponibilidade[]
+  mentor_link            mentor_link[]
+}
+
+model mentor_area {
+  mentor_id         String
+  area_interesse_id Int
+  area_interesse    area_interesse @relation(fields: [area_interesse_id], references: [id])
+  mentor            mentor         @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+
+  @@id([mentor_id, area_interesse_id])
+  @@index([area_interesse_id])
+}
+
+model mentor_arquivo {
+  id        String   @id @db.VarChar(36)
+  mentor_id String
+  nome      String
+  url       String
+  mime      String
+  tamanho   Int
+  criadoEm  DateTime @default(now())
+  mentor    mentor   @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+
+  @@index([mentor_id], map: "mentor_arquivo_mentor_id_fkey")
+}
+
+model mentor_disponibilidade {
+  id          String @id
+  mentor_id   String
+  hora_inicio String @db.VarChar(5)
+  hora_fim    String @db.VarChar(5)
+  data        String @default("") @db.VarChar(10)
+  mentor      mentor @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+
+  @@index([mentor_id])
+}
+
+model mentor_link {
+  id        String @id @db.VarChar(36)
+  mentor_id String
+  label     String
+  url       String
+  ordem     Int    @default(0)
+  mentor    mentor @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+
+  @@index([mentor_id], map: "mentor_link_mentor_id_fkey")
+}
+
+model notificacao {
+  id         String   @id
+  usuario_id String
+  tipo       String   @db.VarChar(50)
+  titulo     String   @db.VarChar(255)
+  mensagem   String   @db.Text
+  lida       Boolean  @default(false)
+  dados      String?  @db.LongText
+  criado_em  DateTime @default(now())
+
+  @@index([usuario_id])
+}
+
+model password_reset_token {
+  id         String   @id
+  token      String   @unique
+  usuario_id String
+  expires_at DateTime
+  created_at DateTime @default(now())
+  usuario    usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@index([usuario_id])
+}
+
+model sessions {
+  session_id String  @id @db.VarChar(128)
+  expires    Int     @db.UnsignedInt
+  data       String? @db.MediumText
+}
+
+model soft_skill {
+  id              Int               @id @default(autoincrement()) @db.UnsignedInt
+  nome            String
+  vaga_soft_skill vaga_soft_skill[]
+}
+
+model usuario {
+  id                   String                 @id
+  email                String                 @unique
+  senha                String
+  tipo                 String
+  email_verificado     Boolean                @default(false)
+  created_at           DateTime               @default(now())
+  googleId             String?                @unique(map: "googleId")
+  avatarUrl            String?
+  nome                 String?                @db.VarChar(255)
+  sobrenome            String?                @db.VarChar(255)
+  uuid                 String?                @unique @db.VarChar(36)
+  linkedinId           String?                @unique(map: "linkedinId")
+  facebookId           String?                @unique(map: "facebookId")
+  candidato            candidato?
+  empresa              empresa?
+  mentor               mentor?
+  password_reset_token password_reset_token[]
+  verification_token   verification_token[]
+}
+
+model vaga {
+  id                   String                     @id
+  empresa_id           String
+  cargo                String
+  tipo_local_trabalho  vaga_tipo_local_trabalho
+  escala_trabalho      String
+  dias_presenciais     Int?
+  dias_home_office     Int?
+  salario              Decimal?                   @db.Decimal(10, 2)
+  moeda                String?                    @db.VarChar(5)
+  descricao            String                     @db.Text
+  beneficio            String?                    @db.Text
+  pergunta             String?                    @db.Text
+  opcao                String?                    @db.Text
+  created_at           DateTime                   @default(now())
+  vinculo_empregaticio vaga_vinculo_empregaticio?
+  uuid                 String?                    @unique @db.VarChar(36)
+  vaga_area            vaga_area[]
+  vaga_soft_skill      vaga_soft_skill[]
+}
+
+model vaga_area {
+  vaga_id           String
+  area_interesse_id Int
+  area_interesse    area_interesse @relation(fields: [area_interesse_id], references: [id])
+  vaga              vaga           @relation(fields: [vaga_id], references: [id])
+
+  @@id([vaga_id, area_interesse_id])
+  @@index([area_interesse_id], map: "vaga_area_area_interesse_id_fkey")
+}
+
+model vaga_arquivo {
+  id       String   @id
+  vaga_id  String
+  nome     String   @db.VarChar(255)
+  mime     String   @db.VarChar(100)
+  tamanho  Int
+  url      String   @db.Text
+  criadoEm DateTime @default(now())
+  uuid     String?  @unique @db.VarChar(36)
+}
+
+model vaga_avaliacao {
+  id           String   @id
+  vaga_id      String
+  candidato_id String
+  score        Int
+  resposta     String?  @db.LongText
+  breakdown    String?  @db.LongText
+  created_at   DateTime @default(now())
+  updated_at   DateTime
+  uuid         String?  @unique @db.VarChar(36)
+
+  @@unique([vaga_id, candidato_id])
+}
+
+model vaga_favorita {
+  id           String    @id
+  vaga_id      String
+  candidato_id String
+  created_at   DateTime  @default(now())
+  candidato    candidato @relation(fields: [candidato_id], references: [id])
+
+  @@unique([vaga_id, candidato_id])
+  @@index([candidato_id], map: "vaga_favorita_candidato_id_fkey")
+}
+
+model vaga_link {
+  id       String   @id
+  vaga_id  String
+  titulo   String   @db.VarChar(120)
+  url      String   @db.VarChar(1024)
+  ordem    Int      @default(1)
+  criadoEm DateTime @default(now())
+  uuid     String?  @unique @db.VarChar(36)
+}
+
+model vaga_soft_skill {
+  soft_skill_id Int        @db.UnsignedInt
+  vaga_id       String
+  soft_skill    soft_skill @relation(fields: [soft_skill_id], references: [id])
+  vaga          vaga       @relation(fields: [vaga_id], references: [id])
+
+  @@id([soft_skill_id, vaga_id])
+  @@index([vaga_id], map: "vaga_soft_skill_vaga_id_fkey")
+}
+
+model vaga_status {
+  id        String   @id
+  vaga_id   String
+  situacao  String   @db.VarChar(10)
+  criado_em DateTime @default(now())
+  uuid      String?  @unique @db.VarChar(36)
+}
+
+model verification_token {
+  id         String   @id
+  token      String   @unique
+  usuario_id String
+  expires_at DateTime
+  created_at DateTime @default(now())
+  usuario    usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@index([usuario_id])
+}
+
+enum vaga_tipo_local_trabalho {
+  Presencial
+  Home_Office @map("Home Office")
+  H_brido     @map("Híbrido")
+}
+
+enum vaga_vinculo_empregaticio {
+  Estagio
+  CLT_Tempo_Integral
+  CLT_Meio_Periodo
+  Trainee
+  Aprendiz
+  PJ
+  Freelancer_Autonomo
+  Temporario
+}
