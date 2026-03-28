@@ -13,7 +13,8 @@ export default function MeetingRoomPage() {
   const isHost = searchParams.get("host") === "true";
   const [copied, setCopied] = useState(false);
   const jitsiApiRef = useRef<any>(null);
-  const roomName = `MentorshipConnect-Room-${token}`;
+  const APP_ID = "vpaas-magic-cookie-d7f2c45c0c354a098db277e88ea512bd";
+  const roomName = `${APP_ID}/MentorshipConnect-Room-${token}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}/meeting/${token}`);
@@ -66,7 +67,7 @@ export default function MeetingRoomPage() {
       {/* ── Jitsi Iframe Area ── */}
       <div style={{ flex: 1, position: "relative", width: "100%", background: "#0a0b0e" }}>
         <JitsiMeeting
-          domain="meet.jit.si"
+          domain="8x8.vc"
           roomName={roomName}
           configOverwrite={{
             startWithAudioMuted: false,
@@ -90,7 +91,7 @@ export default function MeetingRoomPage() {
           }}
           userInfo={{
             displayName: isHost ? "Anfitrião" : "",
-            email: "",
+            email: isHost ? "host@mentorship.local" : "guest@mentorship.local",
           }}
           onApiReady={(externalApi) => {
             jitsiApiRef.current = externalApi;
