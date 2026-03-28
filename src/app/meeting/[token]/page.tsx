@@ -172,12 +172,10 @@ export default function MeetingRoomPage() {
     [clientId, token]
   );
 
-  // ── Peer creation ─────────────────────────────────────────────
   const createPeer = useCallback(() => {
     const pc = new RTCPeerConnection(RTC_CONFIG);
 
-    pc.onicecandidate = ({ candidate }) => {
-      if (candidate) sendSignal("candidate", candidate.toJSON());
+    pc.onicecandidate = () => {
     };
 
     pc.onconnectionstatechange = () => {
@@ -220,7 +218,6 @@ export default function MeetingRoomPage() {
     return pc;
   }, [sendSignal]);
 
-  // ── Host initiates call ───────────────────────────────────────
   const startCall = useCallback(
     async (targetId: string) => {
       try {
@@ -235,7 +232,21 @@ export default function MeetingRoomPage() {
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        await sendSignal("offer", { sdp: offer.sdp, type: offer.type }, targetId);
+        
+        await new Promise<void>((resolve) => {
+          if (pc.iceGatheringState === "complete") return resolve();
+          const checkState = () => {
+            if (pc.iceGatheringState === "complete") {
+              pc.removeEventListener("icegatheringstatechange", checkState);
+              resolve();
+            }
+          };
+          pc.addEventListener("icegatheringstatechange", checkState);
+          setTimeout(() => { pc.removeEventListener("icegatheringstatechange", checkState); resolve(); }, 4000);
+        });
+
+        const finalOffer = pc.localDescription!;
+        await sendSignal("offer", { sdp: finalOffer.sdp, type: finalOffer.type }, targetId);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao iniciar chamada.");
         setConnState("failed");
@@ -244,7 +255,6 @@ export default function MeetingRoomPage() {
     [startLocalStream, createPeer, sendSignal]
   );
 
-  // ── Guest receives offer ──────────────────────────────────────
   const handleOffer = useCallback(
     async (offerSdp: string, offerType: RTCSdpType, fromId: string) => {
       try {
@@ -264,7 +274,21 @@ export default function MeetingRoomPage() {
         await pc.setRemoteDescription(new RTCSessionDescription({ sdp: offerSdp, type: offerType }));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        await sendSignal("answer", { sdp: answer.sdp, type: answer.type }, fromId);
+
+        await new Promise<void>((resolve) => {
+          if (pc.iceGatheringState === "complete") return resolve();
+          const checkState = () => {
+            if (pc.iceGatheringState === "complete") {
+              pc.removeEventListener("icegatheringstatechange", checkState);
+              resolve();
+            }
+          };
+          pc.addEventListener("icegatheringstatechange", checkState);
+          setTimeout(() => { pc.removeEventListener("icegatheringstatechange", checkState); resolve(); }, 4000);
+        });
+
+        const finalAnswer = pc.localDescription!;
+        await sendSignal("answer", { sdp: finalAnswer.sdp, type: finalAnswer.type }, fromId);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao atender chamada.");
         setConnState("failed");
@@ -351,13 +375,6 @@ export default function MeetingRoomPage() {
             break;
           }
           case "candidate": {
-            if (pc && (pc.remoteDescription !== null)) {
-              try {
-                await pc.addIceCandidate(new RTCIceCandidate(sig.data as RTCIceCandidateInit));
-              } catch { /* ignore */ }
-            } else {
-              candidateBufferRef.current.push(sig.data as RTCIceCandidateInit);
-            }
             break;
           }
           case "chat": {
@@ -372,7 +389,6 @@ export default function MeetingRoomPage() {
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
             peerRef.current?.close();
             peerRef.current = null;
-            // Allow reconnect — host goes back to idle
             if (isHost) setConnState("idle");
             break;
           }
