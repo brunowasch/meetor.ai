@@ -2,10 +2,10 @@
 
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { JitsiMeeting } from "@jitsi/react-sdk";
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import { Copy, Target, LogOut, CheckCircle } from "lucide-react";
 
-export default function MeetingRoomPage() {
+function MeetingRoomContent() {
   const { token } = useParams<{ token: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -123,5 +123,13 @@ export default function MeetingRoomPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function MeetingRoomPage() {
+  return (
+    <Suspense fallback={<div style={{ display: "flex", flexDirection: "column", height: "100vh", alignItems: "center", justifyContent: "center", background: "#0a0b0e" }}>Carregando...</div>}>
+      <MeetingRoomContent />
+    </Suspense>
   );
 }
