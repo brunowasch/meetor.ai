@@ -1,16 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Eye, EyeOff, Target } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam === "account_not_found") {
+      setError("Sua conta não foi encontrada no Connect Skills. Cadastre-se primeiro no Connect Skills.");
+    } else if (errorParam === "user_not_found") {
+      setError("Usuário não encontrado. Se você registrou via social, tente logar pela rede.");
+    }
+  }, [searchParams]);
+
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +201,7 @@ export default function LoginPage() {
           {/* Google */}
           <button
             type="button"
-            onClick={() => { window.location.href = "http://localhost:3000/api/auth/google?origin=mentorconnect"; }}
+            onClick={() => { window.location.href = `/api/auth/google`; }}
             style={{ width: "100%", background: "#fff", border: "1px solid #d1d5db", borderRadius: 8, padding: "11px 0", fontSize: 14, fontWeight: 500, color: "#374151", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", transition: "background 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
             onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
@@ -201,7 +213,7 @@ export default function LoginPage() {
           {/* LinkedIn */}
           <button
             type="button"
-            onClick={() => { window.location.href = "http://localhost:3000/api/auth/linkedin?origin=mentorconnect"; }}
+            onClick={() => { window.location.href = `/api/auth/linkedin`; }}
             style={{ width: "100%", background: "#fff", border: "1px solid #0a66c2", borderRadius: 8, padding: "11px 0", fontSize: 14, fontWeight: 500, color: "#0a66c2", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", transition: "background 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#eff6ff")}
             onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
@@ -213,7 +225,7 @@ export default function LoginPage() {
           {/* Facebook */}
           <button
             type="button"
-            onClick={() => { window.location.href = "http://localhost:3000/api/auth/facebook?origin=mentorconnect"; }}
+            onClick={() => { window.location.href = `/api/auth/facebook`; }}
             style={{ width: "100%", background: "#fff", border: "1px solid #1877f2", borderRadius: 8, padding: "11px 0", fontSize: 14, fontWeight: 500, color: "#1877f2", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", transition: "background 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#eff6ff")}
             onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
@@ -226,7 +238,7 @@ export default function LoginPage() {
         {/* Register */}
         <p style={{ textAlign: "center", fontSize: 13, color: "#6b7280", marginTop: 24 }}>
           Não tem uma conta?{" "}
-          <a href="http://localhost:3000/candidate/register" style={{ color: "#3b82f6", fontWeight: 500, textDecoration: "none" }}
+          <a href="/api/auth/register" style={{ color: "#3b82f6", fontWeight: 500, textDecoration: "none" }}
             onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
             onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
           >

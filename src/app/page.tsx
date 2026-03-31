@@ -8,12 +8,38 @@ export default function LandingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [joinLink, setJoinLink] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("mc_user");
-    if (stored) setCurrentUser(JSON.parse(stored));
+    if (!stored) return;
+
+    const parsed = JSON.parse(stored);
+    setCurrentUser(parsed);
+
+    if (parsed?.email) {
+      const connectSkillsUrl = process.env.NEXT_PUBLIC_CONNECT_SKILLS_URL || "";
+      const statusUrl = connectSkillsUrl
+        ? `${connectSkillsUrl}/api/user/status?email=${encodeURIComponent(parsed.email)}`
+        : `/api/auth/refresh-profile?email=${encodeURIComponent(parsed.email)}`;
+
+      fetch(statusUrl)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (!data?.exists) return;
+          const updated = {
+            ...parsed,
+            nome:        data.nome        ?? parsed.nome,
+            sobrenome:   data.sobrenome   ?? parsed.sobrenome,
+            foto_perfil: data.foto_perfil ?? parsed.foto_perfil,
+          };
+          localStorage.setItem("mc_user", JSON.stringify(updated));
+          setCurrentUser(updated);
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const handleLogout = () => {
@@ -73,15 +99,24 @@ export default function LandingPage() {
             {currentUser ? (
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 20, background: "var(--primary-50)", border: "1px solid var(--primary-200)" }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <User size={14} color="white" />
-                  </div>
+                  {currentUser.foto_perfil ? (
+                    <img 
+                      src={currentUser.foto_perfil} 
+                      alt="Foto de perfil" 
+                      style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} 
+                    />
+                  ) : (
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <User size={14} color="white" />
+                    </div>
+                  )}
                   <span style={{ fontSize: 14, fontWeight: 600, color: "var(--primary)" }}>
                     {[currentUser.nome, currentUser.sobrenome].filter(Boolean).join(" ") || currentUser.email}
+                    {currentUser.tipo && ` - ${currentUser.tipo.charAt(0).toUpperCase() + currentUser.tipo.slice(1).toLowerCase()}`}
                   </span>
                 </div>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setLogoutModalOpen(true)}
                   className="btn btn-ghost btn-sm"
                   style={{ borderRadius: 20, padding: "6px 12px", color: "var(--text-muted)" }}
                   title="Sair"
@@ -201,6 +236,37 @@ export default function LandingPage() {
                 Entrar na Sala
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {logoutModalOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }} className="animate-fade-in">
+          <div style={{ background: "var(--surface)", padding: 32, borderRadius: 24, width: "100%", maxWidth: 400, boxShadow: "0 24px 48px rgba(0,0,0,0.2)", position: "relative", textAlign: "center" }}>
+            <button onClick={() => setLogoutModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+              <X size={24} />
+            </button>
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#fee2e2", marginBottom: 16 }}>
+              <LogOut size={28} color="#dc2626" />
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>Sair da conta?</h2>
+            <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
+              Tem certeza que deseja sair agora? Você precisará fazer login novamente para acessar suas próximas chamadas.
+            </p>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+              <button onClick={() => setLogoutModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600 }}>
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  handleLogout();
+                  setLogoutModalOpen(false);
+                }} 
+                style={{ flex: 1, padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600, background: "#dc2626", color: "white", border: "none", cursor: "pointer" }}
+              >
+                Sim, sair
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -6,375 +6,294 @@ datasource db {
   provider = "mysql"
 }
 
-model area_interesse {
-  id             Int              @id @default(autoincrement())
-  nome           String?          @unique @db.VarChar(100)
-  padrao         Boolean?         @default(false)
-  uuid           String?          @unique @db.VarChar(36)
-  candidato_area candidato_area[]
-  mentor_area    mentor_area[]
-  vaga_area      vaga_area[]
+model authorized_domains {
+  id          String    @id @db.VarChar(36)
+  customer_id String    @db.VarChar(36)
+  domain      String    @db.VarChar(100)
+  customers   customers @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "authorized_domains_ibfk_1")
+
+  @@index([customer_id], map: "customer_id")
 }
 
-model candidato {
-  id                     String              @id
-  usuario_id             String              @unique
-  nome                   String?
-  sobrenome              String?
-  data_nascimento        DateTime?
-  pais                   String?
-  descricao              String?             @db.Text
-  estado                 String?
-  cidade                 String?
-  telefone               String?
-  foto_perfil            String?
-  uuid                   String?             @unique @db.VarChar(36)
-  consentimento_parental Boolean?            @default(false)
-  email_responsavel      String?
-  usuario                usuario             @relation(fields: [usuario_id], references: [id])
-  candidato_area         candidato_area[]
-  candidato_arquivo      candidato_arquivo[]
-  candidato_link         candidato_link[]
-  vaga_favorita          vaga_favorita[]
+model customer_addresses {
+  id          String    @id @db.VarChar(36)
+  customer_id String    @db.VarChar(36)
+  street      String    @db.VarChar(100)
+  number      String    @db.VarChar(20)
+  complement  String?   @db.VarChar(100)
+  district    String    @db.VarChar(100)
+  city        String    @db.VarChar(100)
+  state       String    @db.Char(2)
+  zip_code    String    @db.VarChar(9)
+  customers   customers @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "customer_addresses_ibfk_1")
+
+  @@index([customer_id], map: "customer_id")
 }
 
-model candidato_area {
-  candidato_id      String
-  area_interesse_id Int
-  area_interesse    area_interesse @relation(fields: [area_interesse_id], references: [id])
-  candidato         candidato      @relation(fields: [candidato_id], references: [id])
-
-  @@id([candidato_id, area_interesse_id])
-  @@index([area_interesse_id], map: "candidato_area_area_interesse_id_fkey")
+model customers {
+  id                 String               @id @db.VarChar(36)
+  name               String               @db.VarChar(100)
+  cnpj               String               @unique(map: "cnpj") @db.VarChar(18)
+  sla_response       Int                  @default(30)
+  sla_resolution     Int                  @default(24)
+  created_at         DateTime?            @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(0)
+  authorized_domains authorized_domains[]
+  customer_addresses customer_addresses[]
+  departments        departments[]
+  tickets            tickets[]
+  users              users[]
 }
 
-model candidato_arquivo {
-  id           String    @id
-  candidato_id String
-  nome         String
-  url          String
-  mime         String
-  tamanho      Int
-  criadoEm     DateTime  @default(now())
-  uuid         String?   @unique @db.VarChar(36)
-  candidato    candidato @relation(fields: [candidato_id], references: [id])
+model departments {
+  id          String    @id @db.VarChar(36)
+  customer_id String    @db.VarChar(36)
+  name        String    @db.VarChar(100)
+  customers   customers @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "departments_ibfk_1")
+  tickets     tickets[]
+  users       users[]
 
-  @@index([candidato_id], map: "candidato_arquivo_candidato_id_fkey")
+  @@index([customer_id], map: "customer_id")
 }
 
-model candidato_link {
-  id           String    @id
-  candidato_id String
-  label        String    @db.VarChar(50)
-  url          String    @db.VarChar(255)
-  ordem        Int       @default(0)
-  uuid         String?   @unique @db.VarChar(36)
-  candidato    candidato @relation(fields: [candidato_id], references: [id], onDelete: Cascade)
-
-  @@index([candidato_id], map: "candidato_link_candidato_id_fkey")
+model employees {
+  id         String          @id @db.VarChar(36)
+  name       String          @db.VarChar(100)
+  email      String          @unique(map: "email") @db.VarChar(100)
+  phone      String          @db.VarChar(15)
+  position   String          @db.VarChar(100)
+  level      employees_level
+  hire_date  DateTime        @db.Date
+  created_at DateTime?       @default(now()) @db.Timestamp(0)
+  updated_at DateTime?       @default(now()) @db.Timestamp(0)
+  tickets    tickets[]
 }
 
-model empresa {
-  id              String            @id
-  usuario_id      String            @unique
-  nome_empresa    String
-  descricao       String?
-  telefone        String?
-  pais            String?
-  estado          String?
-  cidade          String?
-  foto_perfil     String?
-  uuid            String?           @unique @db.VarChar(36)
-  usuario         usuario           @relation(fields: [usuario_id], references: [id])
-  empresa_arquivo empresa_arquivo[]
-  empresa_link    empresa_link[]
+model experience_enrollments {
+  id       Int @id @default(autoincrement()) @db.UnsignedInt
+  userid   Int @db.UnsignedInt
+  courseid Int @db.UnsignedInt
+  enrolled Int @default(1) @db.UnsignedTinyInt
 }
 
-model empresa_arquivo {
-  id         String   @id
-  empresa_id String
-  nome       String
-  url        String
-  mime       String?
-  tamanho    Int?
-  criadoEm   DateTime @default(now())
-  uuid       String?  @unique @db.VarChar(36)
-  empresa    empresa  @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
-
-  @@index([empresa_id], map: "empresa_arquivo_empresa_id_fkey")
+model experience_users {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  dtreg        DateTime @db.DateTime(0)
+  name         String   @db.VarChar(64)
+  email        String   @db.VarChar(128)
+  phone        String   @db.VarChar(16)
+  neighborhood String   @db.VarChar(64)
+  city         String   @db.VarChar(64)
+  state        String   @db.VarChar(2)
+  birthday     DateTime @db.Date
+  gender       String   @db.VarChar(12)
+  scholarity   String   @db.VarChar(12)
+  avatarid     String   @default("generic") @db.VarChar(20)
+  cpf          String   @db.VarChar(20)
+  ans1         String   @default("-") @db.Char(1)
+  ans2         String   @default("-") @db.Char(1)
+  ans3         String   @default("-") @db.Char(1)
+  ans4         String   @default("-") @db.Char(1)
+  ans5         String   @default("-") @db.Char(1)
+  ans6         String   @default("-") @db.Char(1)
+  ans7         String   @default("-") @db.Char(1)
+  ans8         String   @default("-") @db.Char(1)
+  ans9         String   @default("-") @db.Char(1)
+  ans10        String   @default("-") @db.Char(1)
+  ans11        String   @default("-") @db.Char(1)
+  ans12        String   @default("-") @db.Char(1)
 }
 
-model empresa_link {
-  id         String  @id
-  empresa_id String
-  label      String  @db.VarChar(100)
-  url        String  @db.VarChar(255)
-  ordem      Int     @default(0)
-  uuid       String? @unique @db.VarChar(36)
-  empresa    empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
-
-  @@index([empresa_id], map: "empresa_link_empresa_id_fkey")
+model experience_words {
+  id      Int      @id @default(autoincrement()) @db.UnsignedInt
+  word    String   @db.VarChar(32)
+  count   Int      @default(1)
+  dtfirst DateTime @db.DateTime(0)
+  dtlast  DateTime @db.DateTime(0)
 }
 
-model entrevista_mentor {
-  id                 String   @id
-  vaga_id            String
-  candidato_id       String
-  mentor_id          String
-  disponibilidade_id String
-  status             String   @default("PENDENTE_CANDIDATO") @db.VarChar(30)
-  data               String   @db.VarChar(10)
-  hora_inicio        String   @db.VarChar(5)
-  hora_fim           String   @db.VarChar(5)
-  criado_em          DateTime @default(now())
-  atualizado_em      DateTime
-  mentor_notificado  Boolean  @default(false)
-
-  @@index([candidato_id])
-  @@index([mentor_id])
-  @@index([vaga_id])
+model questions {
+  id       Int    @id @default(autoincrement()) @db.UnsignedInt
+  storyid  Int    @db.UnsignedInt
+  question String @db.VarChar(256)
 }
 
-model mentor {
-  id                     String                   @id
-  usuario_id             String                   @unique
-  nome                   String?
-  sobrenome              String?
-  bio                    String?                  @db.Text
-  foto_perfil            String?
-  uuid                   String?                  @unique @db.VarChar(36)
-  cidade                 String?
-  estado                 String?
-  pais                   String?
-  telefone               String?
-  usuario                usuario                  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-  mentor_area            mentor_area[]
-  mentor_arquivo         mentor_arquivo[]
-  mentor_disponibilidade mentor_disponibilidade[]
-  mentor_link            mentor_link[]
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model stories {
+  id      Int
+  title   String        @db.VarChar(128)
+  genre   stories_genre
+  grade   Int           @db.UnsignedInt
+  content String        @db.Text
+
+  @@ignore
 }
 
-model mentor_area {
-  mentor_id         String
-  area_interesse_id Int
-  area_interesse    area_interesse @relation(fields: [area_interesse_id], references: [id])
-  mentor            mentor         @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model test {
+  id   Int?
+  name String? @db.VarChar(256)
 
-  @@id([mentor_id, area_interesse_id])
-  @@index([area_interesse_id])
+  @@ignore
 }
 
-model mentor_arquivo {
-  id        String   @id @db.VarChar(36)
-  mentor_id String
-  nome      String
-  url       String
-  mime      String
-  tamanho   Int
-  criadoEm  DateTime @default(now())
-  mentor    mentor   @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+model ticket_attachments {
+  id          String    @id @db.VarChar(36)
+  ticket_id   String    @db.VarChar(36)
+  name        String    @db.VarChar(255)
+  url         String    @db.VarChar(255)
+  size        Int
+  type        String    @db.VarChar(100)
+  uploaded_at DateTime? @default(now()) @db.Timestamp(0)
+  tickets     tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ticket_attachments_ibfk_1")
 
-  @@index([mentor_id], map: "mentor_arquivo_mentor_id_fkey")
+  @@index([ticket_id], map: "ticket_id")
 }
 
-model mentor_disponibilidade {
-  id          String @id
-  mentor_id   String
-  hora_inicio String @db.VarChar(5)
-  hora_fim    String @db.VarChar(5)
-  data        String @default("") @db.VarChar(10)
-  mentor      mentor @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+model ticket_history {
+  id         String              @id @db.VarChar(36)
+  ticket_id  String              @db.VarChar(36)
+  type       ticket_history_type
+  content    String              @db.Text
+  user_id    String              @db.VarChar(36)
+  metadata   Json?
+  created_at DateTime?           @default(now()) @db.Timestamp(0)
+  tickets    tickets             @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ticket_history_ibfk_1")
+  users      users               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ticket_history_ibfk_2")
 
-  @@index([mentor_id])
+  @@index([ticket_id], map: "ticket_id")
+  @@index([user_id], map: "user_id")
 }
 
-model mentor_link {
-  id        String @id @db.VarChar(36)
-  mentor_id String
-  label     String
-  url       String
-  ordem     Int    @default(0)
-  mentor    mentor @relation(fields: [mentor_id], references: [id], onDelete: Cascade)
+model tickets {
+  id                 String                 @id @db.VarChar(36)
+  type               tickets_type
+  title              String                 @db.VarChar(200)
+  description        String                 @db.Text
+  customer_id        String                 @db.VarChar(36)
+  department_id      String                 @db.VarChar(36)
+  priority           tickets_priority
+  sla                tickets_sla
+  status             tickets_status
+  service_status     tickets_service_status
+  justification      String?                @db.Text
+  assigned_to_id     String?                @db.VarChar(36)
+  created_by_id      String                 @db.VarChar(36)
+  created_at         DateTime?              @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?              @default(now()) @db.Timestamp(0)
+  closed_at          DateTime?              @db.Timestamp(0)
+  ticket_attachments ticket_attachments[]
+  ticket_history     ticket_history[]
+  customers          customers              @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tickets_ibfk_1")
+  departments        departments            @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tickets_ibfk_2")
+  employees          employees?             @relation(fields: [assigned_to_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tickets_ibfk_3")
+  users              users                  @relation(fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tickets_ibfk_4")
 
-  @@index([mentor_id], map: "mentor_link_mentor_id_fkey")
+  @@index([assigned_to_id], map: "assigned_to_id")
+  @@index([created_by_id], map: "created_by_id")
+  @@index([customer_id], map: "customer_id")
+  @@index([department_id], map: "department_id")
 }
 
-model notificacao {
-  id         String   @id
-  usuario_id String
-  tipo       String   @db.VarChar(50)
-  titulo     String   @db.VarChar(255)
-  mensagem   String   @db.Text
-  lida       Boolean  @default(false)
-  dados      String?  @db.LongText
-  criado_em  DateTime @default(now())
+model users {
+  id             String           @id @db.VarChar(36)
+  name           String           @db.VarChar(100)
+  email          String           @unique(map: "email") @db.VarChar(100)
+  phone          String           @db.VarChar(15)
+  role           users_role
+  customer_id    String?          @db.VarChar(36)
+  department_id  String?          @db.VarChar(36)
+  created_at     DateTime?        @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?        @default(now()) @db.Timestamp(0)
+  ticket_history ticket_history[]
+  tickets        tickets[]
+  customers      customers?       @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+  departments    departments?     @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_2")
 
-  @@index([usuario_id])
+  @@index([customer_id], map: "customer_id")
+  @@index([department_id], map: "department_id")
 }
 
-model password_reset_token {
-  id         String   @id
-  token      String   @unique
-  usuario_id String
-  expires_at DateTime
-  created_at DateTime @default(now())
-  usuario    usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-
-  @@index([usuario_id])
+enum tickets_type {
+  request
+  incident
 }
 
-model sessions {
-  session_id String  @id @db.VarChar(128)
-  expires    Int     @db.UnsignedInt
-  data       String? @db.MediumText
+enum stories_genre {
+  Fantasy
+  Mistery
+  Detective
+  Horror
+  History
+  Daily_Life @map("Daily Life")
+  Other
 }
 
-model soft_skill {
-  id              Int               @id @default(autoincrement()) @db.UnsignedInt
-  nome            String
-  vaga_soft_skill vaga_soft_skill[]
+enum ticket_history_type {
+  status_change @map("status-change")
+  comment
+  field_update  @map("field-update")
+  attachment
 }
 
-model usuario {
-  id                   String                 @id
-  email                String                 @unique
-  senha                String
-  tipo                 String
-  email_verificado     Boolean                @default(false)
-  created_at           DateTime               @default(now())
-  googleId             String?                @unique(map: "googleId")
-  avatarUrl            String?
-  nome                 String?                @db.VarChar(255)
-  sobrenome            String?                @db.VarChar(255)
-  uuid                 String?                @unique @db.VarChar(36)
-  linkedinId           String?                @unique(map: "linkedinId")
-  facebookId           String?                @unique(map: "facebookId")
-  candidato            candidato?
-  empresa              empresa?
-  mentor               mentor?
-  password_reset_token password_reset_token[]
-  verification_token   verification_token[]
+enum users_role {
+  super
+  admin
+  operator
 }
 
-model vaga {
-  id                   String                     @id
-  empresa_id           String
-  cargo                String
-  tipo_local_trabalho  vaga_tipo_local_trabalho
-  escala_trabalho      String
-  dias_presenciais     Int?
-  dias_home_office     Int?
-  salario              Decimal?                   @db.Decimal(10, 2)
-  moeda                String?                    @db.VarChar(5)
-  descricao            String                     @db.Text
-  beneficio            String?                    @db.Text
-  pergunta             String?                    @db.Text
-  opcao                String?                    @db.Text
-  created_at           DateTime                   @default(now())
-  vinculo_empregaticio vaga_vinculo_empregaticio?
-  uuid                 String?                    @unique @db.VarChar(36)
-  vaga_area            vaga_area[]
-  vaga_soft_skill      vaga_soft_skill[]
+enum employees_level {
+  junior
+  pleno
+  senior
 }
 
-model vaga_area {
-  vaga_id           String
-  area_interesse_id Int
-  area_interesse    area_interesse @relation(fields: [area_interesse_id], references: [id])
-  vaga              vaga           @relation(fields: [vaga_id], references: [id])
-
-  @@id([vaga_id, area_interesse_id])
-  @@index([area_interesse_id], map: "vaga_area_area_interesse_id_fkey")
+enum tickets_priority {
+  urgent
+  medium
+  low
+  very_low @map("very-low")
 }
 
-model vaga_arquivo {
-  id       String   @id
-  vaga_id  String
-  nome     String   @db.VarChar(255)
-  mime     String   @db.VarChar(100)
-  tamanho  Int
-  url      String   @db.Text
-  criadoEm DateTime @default(now())
-  uuid     String?  @unique @db.VarChar(36)
+enum tickets_sla {
+  basic
+  advanced
+  premium
 }
 
-model vaga_avaliacao {
-  id           String   @id
-  vaga_id      String
-  candidato_id String
-  score        Int
-  resposta     String?  @db.LongText
-  breakdown    String?  @db.LongText
-  created_at   DateTime @default(now())
-  updated_at   DateTime
-  uuid         String?  @unique @db.VarChar(36)
-
-  @@unique([vaga_id, candidato_id])
+enum tickets_status {
+  open
+  in_progress @map("in-progress")
+  closed
 }
 
-model vaga_favorita {
-  id           String    @id
-  vaga_id      String
-  candidato_id String
-  created_at   DateTime  @default(now())
-  candidato    candidato @relation(fields: [candidato_id], references: [id])
-
-  @@unique([vaga_id, candidato_id])
-  @@index([candidato_id], map: "vaga_favorita_candidato_id_fkey")
+enum tickets_service_status {
+  backlog
+  review
+  in_progress @map("in-progress")
+  pending
+  completed
+  cancelled
 }
 
-model vaga_link {
-  id       String   @id
-  vaga_id  String
-  titulo   String   @db.VarChar(120)
-  url      String   @db.VarChar(1024)
-  ordem    Int      @default(1)
-  criadoEm DateTime @default(now())
-  uuid     String?  @unique @db.VarChar(36)
+model mentorconnect_usuario {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  usuario_id      String   @unique @db.VarChar(255)
+  email           String   @db.VarChar(255)
+  senha           String?  @db.VarChar(255)
+  nome            String?  @db.VarChar(255)
+  sobrenome       String?  @db.VarChar(255)
+  tipo            mentorconnect_usuario_tipo
+  foto_perfil     String?  @db.Text
+  cidade          String?  @db.VarChar(255)
+  estado          String?  @db.VarChar(255)
+  pais            String?  @db.VarChar(255)
+  bio_descricao   String?  @db.Text
+  sincronizado_em DateTime @default(now())
+  atualizado_em   DateTime @updatedAt
 }
 
-model vaga_soft_skill {
-  soft_skill_id Int        @db.UnsignedInt
-  vaga_id       String
-  soft_skill    soft_skill @relation(fields: [soft_skill_id], references: [id])
-  vaga          vaga       @relation(fields: [vaga_id], references: [id])
-
-  @@id([soft_skill_id, vaga_id])
-  @@index([vaga_id], map: "vaga_soft_skill_vaga_id_fkey")
-}
-
-model vaga_status {
-  id        String   @id
-  vaga_id   String
-  situacao  String   @db.VarChar(10)
-  criado_em DateTime @default(now())
-  uuid      String?  @unique @db.VarChar(36)
-}
-
-model verification_token {
-  id         String   @id
-  token      String   @unique
-  usuario_id String
-  expires_at DateTime
-  created_at DateTime @default(now())
-  usuario    usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-
-  @@index([usuario_id])
-}
-
-enum vaga_tipo_local_trabalho {
-  Presencial
-  Home_Office @map("Home Office")
-  H_brido     @map("Híbrido")
-}
-
-enum vaga_vinculo_empregaticio {
-  Estagio
-  CLT_Tempo_Integral
-  CLT_Meio_Periodo
-  Trainee
-  Aprendiz
-  PJ
-  Freelancer_Autonomo
-  Temporario
+enum mentorconnect_usuario_tipo {
+  candidato
+  mentor
 }
