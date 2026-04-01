@@ -20,10 +20,7 @@ export default function LandingPage() {
     setCurrentUser(parsed);
 
     if (parsed?.email) {
-      const connectSkillsUrl = process.env.NEXT_PUBLIC_CONNECT_SKILLS_URL || "";
-      const statusUrl = connectSkillsUrl
-        ? `${connectSkillsUrl}/api/user/status?email=${encodeURIComponent(parsed.email)}`
-        : `/api/auth/refresh-profile?email=${encodeURIComponent(parsed.email)}`;
+      const statusUrl = `/api/auth/refresh-profile?email=${encodeURIComponent(parsed.email)}`;
 
       fetch(statusUrl)
         .then((r) => r.ok ? r.json() : null)
