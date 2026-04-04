@@ -280,7 +280,7 @@ export default function LandingPage() {
               <X size={24} />
             </button>
             <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#e0f2fe", marginBottom: 16 }}>
-              <Target size={28} color="#0284c7" />
+              <img src="/icon.png" alt="Connect Skills" style={{ width: 32, height: 32, objectFit: "contain" }} />
             </div>
             <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>Conta Necessária</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
