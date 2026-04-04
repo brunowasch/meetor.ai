@@ -9,6 +9,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [joinLink, setJoinLink] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -55,6 +56,10 @@ export default function LandingPage() {
   };
 
   const handleCreateMeeting = () => {
+    if (!currentUser) {
+      setRegisterModalOpen(true);
+      return;
+    }
     setLoading(true);
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
@@ -262,6 +267,36 @@ export default function LandingPage() {
                 style={{ flex: 1, padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600, background: "#dc2626", color: "white", border: "none", cursor: "pointer" }}
               >
                 Sim, sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {registerModalOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }} className="animate-fade-in">
+          <div style={{ background: "var(--surface)", padding: 32, borderRadius: 24, width: "100%", maxWidth: 400, boxShadow: "0 24px 48px rgba(0,0,0,0.2)", position: "relative", textAlign: "center" }}>
+            <button onClick={() => setRegisterModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+              <X size={24} />
+            </button>
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#e0f2fe", marginBottom: 16 }}>
+              <Target size={28} color="#0284c7" />
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>Conta Necessária</h2>
+            <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
+              Apenas usuários do Connect Skills podem criar novas salas de reunião. Se você não tem uma conta, cadastre-se agora mesmo!
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", justifyContent: "center" }}>
+              <button 
+                onClick={() => {
+                  window.location.href = "/api/auth/register";
+                }} 
+                style={{ width: "100%", padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600, background: "var(--primary)", color: "white", border: "none", cursor: "pointer" }}
+              >
+                Cadastrar no Connect Skills
+              </button>
+              <button onClick={() => setRegisterModalOpen(false)} className="btn btn-secondary" style={{ width: "100%", padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600 }}>
+                Cancelar
               </button>
             </div>
           </div>
