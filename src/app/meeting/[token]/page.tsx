@@ -13,10 +13,11 @@ function MeetingRoomContent() {
   const isHost = searchParams.get("host") === "true";
   const [copied, setCopied] = useState(false);
   const jitsiApiRef = useRef<any>(null);
-  const APP_ID = "vpaas-magic-cookie-d7f2c45c0c354a098db277e88ea512bd";
-  const roomName = `${APP_ID}/MentorshipConnect-Room-${token}`;
+  const APP_ID = process.env.APP_ID;
+  const roomName = token ? `${APP_ID}/MentorshipConnect-Room-${token}` : "";
 
   const copyLink = () => {
+    if (!token) return;
     navigator.clipboard.writeText(`${window.location.origin}/meeting/${token}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -28,6 +29,14 @@ function MeetingRoomContent() {
     }
     router.push("/");
   };
+
+  if (!token) {
+    return (
+      <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#0a0b0e", color: "#666" }}>
+        Identificando sala...
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#08090c", color: "#fff", fontFamily: "'Inter', sans-serif" }}>
@@ -42,7 +51,7 @@ function MeetingRoomContent() {
               Sala de Mentoria Privada
               {isHost && <span style={{ fontSize: 10, fontWeight: 800, background: "rgba(37,99,235,.2)", color: "#60a5fa", padding: "3px 10px", borderRadius: 20, letterSpacing: 0.5 }}>ANFITRIÃO</span>}
             </div>
-            <div style={{ fontSize: 13, color: "#666", marginTop: 2 }}>#{token.substring(0, 8)}</div>
+            <div style={{ fontSize: 13, color: "#666", marginTop: 2 }}>#{token?.substring(0, 8)}</div>
           </div>
         </div>
 
@@ -103,7 +112,7 @@ function MeetingRoomContent() {
             }
 
             externalApi.addListener("videoConferenceLeft", () => {
-               router.push("/");
+              router.push("/");
             });
           }}
           getIFrameRef={(iframeRef) => {

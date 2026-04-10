@@ -277,20 +277,41 @@ enum tickets_service_status {
 }
 
 model mentorconnect_usuario {
-  id              String   @id @default(uuid()) @db.VarChar(36)
-  usuario_id      String   @unique @db.VarChar(255)
-  email           String   @db.VarChar(255)
-  senha           String?  @db.VarChar(255)
-  nome            String?  @db.VarChar(255)
-  sobrenome       String?  @db.VarChar(255)
+  id              String                     @id @default(uuid()) @db.VarChar(36)
+  usuario_id      String                     @unique @db.VarChar(255)
+  email           String                     @db.VarChar(255)
+  senha           String?                    @db.VarChar(255)
+  nome            String?                    @db.VarChar(255)
+  sobrenome       String?                    @db.VarChar(255)
   tipo            mentorconnect_usuario_tipo
-  foto_perfil     String?  @db.Text
-  cidade          String?  @db.VarChar(255)
-  estado          String?  @db.VarChar(255)
-  pais            String?  @db.VarChar(255)
-  bio_descricao   String?  @db.Text
-  sincronizado_em DateTime @default(now())
-  atualizado_em   DateTime @updatedAt
+  foto_perfil     String?                    @db.Text
+  cidade          String?                    @db.VarChar(255)
+  estado          String?                    @db.VarChar(255)
+  pais            String?                    @db.VarChar(255)
+  bio_descricao   String?                    @db.Text
+  sincronizado_em DateTime                   @default(now())
+  atualizado_em   DateTime                   @updatedAt
+  reunioes        mentorconnect_reuniao[]
+}
+
+model mentorconnect_reuniao {
+  id           String                        @id @default(uuid()) @db.VarChar(36)
+  token        String                        @unique @db.VarChar(64)
+  titulo       String?                       @db.VarChar(255)
+  criado_por   String                        @db.VarChar(255)
+  status       mentorconnect_reuniao_status  @default(ativa)
+  link         String                        @db.VarChar(512)
+  criado_em    DateTime                      @default(now())
+  atualizado_em DateTime                     @updatedAt
+  usuario      mentorconnect_usuario         @relation(fields: [criado_por], references: [usuario_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([criado_por], map: "reuniao_criado_por_idx")
+}
+
+enum mentorconnect_reuniao_status {
+  ativa
+  encerrada
+  cancelada
 }
 
 enum mentorconnect_usuario_tipo {
