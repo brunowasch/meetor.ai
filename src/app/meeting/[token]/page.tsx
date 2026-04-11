@@ -43,7 +43,7 @@ export default function MeetingRoomPage() {
       {/* ── Custom Header ── */}
       <header style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", background: "#0e0f12", borderBottom: "1px solid #1a1b1f", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, #2563eb, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, #1DB5DA, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Target size={18} color="white" />
           </div>
           <div>

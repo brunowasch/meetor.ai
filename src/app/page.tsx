@@ -82,20 +82,13 @@ export default function LandingPage() {
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <div className="container" style={{ display: "flex", alignItems: "center", height: 64, justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: "linear-gradient(135deg, #2563eb, #06b6d4)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
-              }}
-            >
-              <Target size={20} color="white" />
-            </div>
-            <span style={{ fontSize: 20, fontWeight: 800 }}>MentorConnect <span className="text-gray-400 text-sm">Meet</span></span>
+        <div className="container" style={{ display: "flex", alignItems: "center", height: 100, justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <img 
+              src="/logos/mentor.ai.png" 
+              alt="Mentor AI" 
+              style={{ height: 100, width: "auto", objectFit: "contain" }} 
+            />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {currentUser ? (
@@ -108,7 +101,7 @@ export default function LandingPage() {
                       style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} 
                     />
                   ) : (
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #1DB5DA, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <User size={14} color="white" />
                     </div>
                   )}
@@ -149,7 +142,7 @@ export default function LandingPage() {
           justifyContent: "center",
           position: "relative",
           overflow: "hidden",
-          paddingTop: 64,
+          paddingTop: 100,
         }}
       >
         <div style={{ textAlign: "center", zIndex: 10 }}>
@@ -166,9 +159,11 @@ export default function LandingPage() {
             Videochamadas em <br/>
             <span
               style={{
-                background: "linear-gradient(135deg, #2563eb, #06b6d4)",
+                backgroundImage: "linear-gradient(135deg, #1DB5DA, #06b6d4)",
                 WebkitBackgroundClip: "text",
+                backgroundClip: "text",
                 WebkitTextFillColor: "transparent",
+                color: "transparent",
               }}
             >
               Tempo Real

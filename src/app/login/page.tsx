@@ -51,7 +51,7 @@ function LoginContent() {
 
   return (
     <div
-      style={{ minHeight: "100vh", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 16px 16px", fontFamily: "Inter, sans-serif" }}
+      style={{ minHeight: "100vh", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", padding: "120px 16px 16px", fontFamily: "Inter, sans-serif" }}
     >
       <nav
         style={{
@@ -65,22 +65,13 @@ function LoginContent() {
           borderBottom: "1px solid #e5e7eb",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", height: 64, justifyContent: "space-between", padding: "0 24px", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => router.push("/")}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: "linear-gradient(135deg, #2563eb, #06b6d4)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}
-            >
-              <Target size={20} color="white" />
-            </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: "#111827" }}>
-              MentorConnect <span style={{ color: "#9ca3af", fontSize: 14 }}>Meet</span>
-            </span>
+        <div style={{ display: "flex", alignItems: "center", height: 100, justifyContent: "space-between", padding: "0 24px", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => router.push("/")}>
+            <img 
+              src="/logos/mentor.ai.png" 
+              alt="Mentor AI" 
+              style={{ height: 80, width: "auto", objectFit: "contain" }} 
+            />
           </div>
           <div>
             <a href="#" onClick={(e) => { e.preventDefault(); router.push("/"); }} style={{ fontSize: 14, color: "#6b7280", textDecoration: "none" }} onMouseEnter={e => (e.currentTarget.style.color="#111827")} onMouseLeave={e => (e.currentTarget.style.color="#6b7280")}>
@@ -148,11 +139,11 @@ function LoginContent() {
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#374151", cursor: "pointer", userSelect: "none" }}>
               <input
                 type="checkbox"
-                style={{ width: 16, height: 16, accentColor: "#2563eb", cursor: "pointer", borderRadius: 4 }}
+                style={{ width: 16, height: 16, accentColor: "#1DB5DA", cursor: "pointer", borderRadius: 4 }}
               />
               Manter login
             </label>
-            <a href="#" style={{ fontSize: 14, color: "#3b82f6", textDecoration: "none" }}
+            <a href="#" style={{ fontSize: 14, color: "#46c8e8", textDecoration: "none" }}
               onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
               onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
             >
@@ -166,7 +157,7 @@ function LoginContent() {
             disabled={loading}
             style={{
               width: "100%",
-              background: loading ? "#60a5fa" : "#2563eb",
+              background: loading ? "#93e2f5" : "#1DB5DA",
               color: "#fff",
               border: "none",
               borderRadius: 8,
@@ -181,8 +172,8 @@ function LoginContent() {
               transition: "background 0.15s",
               marginTop: 4,
             }}
-            onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "#1d4ed8"; }}
-            onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "#2563eb"; }}
+            onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "#1798b8"; }}
+            onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "#1DB5DA"; }}
           >
             {loading && <Loader2 className="animate-spin" size={16} />}
             {loading ? "Entrando..." : "Entrar"}
@@ -238,7 +229,7 @@ function LoginContent() {
         {/* Register */}
         <p style={{ textAlign: "center", fontSize: 13, color: "#6b7280", marginTop: 24 }}>
           Não tem uma conta?{" "}
-          <a href="/api/auth/register" style={{ color: "#3b82f6", fontWeight: 500, textDecoration: "none" }}
+          <a href="/api/auth/register" style={{ color: "#46c8e8", fontWeight: 500, textDecoration: "none" }}
             onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
             onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
           >
@@ -254,7 +245,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: "100vh", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, sans-serif" }}>
-        <Loader2 className="animate-spin" size={32} color="#2563eb" />
+        <Loader2 className="animate-spin" size={32} color="#1DB5DA" />
       </div>
     }>
       <LoginContent />
