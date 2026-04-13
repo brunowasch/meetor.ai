@@ -9,12 +9,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MentorConnect – Plataforma de Mentoria Online",
+  title: "Meetor",
   description:
     "Agende e realize sessões de mentoria por videochamada com mentores especialistas. Conexões que transformam carreiras.",
   keywords: "mentoria, videochamada, desenvolvimento profissional, coaching, carreira",
   openGraph: {
-    title: "MentorConnect",
+    title: "Meetor",
     description: "Plataforma de agendamento e realização de sessões de mentoria por vídeo.",
     type: "website",
   },
