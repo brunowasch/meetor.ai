@@ -44,6 +44,9 @@ export async function GET(req: NextRequest) {
         }
 
         let authorizedUsuarioIds: string[] = [];
+        let mentorUsuarioId: string | null = null;
+        let entrevistaId: string | null = null;
+
         try {
             const csRes = await fetch(
                 `${connectSkillsUrl}/api/mentor/interview/participants?token=${encodeURIComponent(token)}`,
@@ -56,6 +59,8 @@ export async function GET(req: NextRequest) {
             if (csRes.ok) {
                 const csData = await csRes.json();
                 authorizedUsuarioIds = csData.authorizedUsuarioIds ?? [];
+                mentorUsuarioId = csData.mentorUsuarioId ?? null;
+                entrevistaId = csData.entrevistaId ?? null;
             } else if (csRes.status === 404) {
                 authorizedUsuarioIds = [reuniao.criado_por];
             } else {
@@ -76,8 +81,12 @@ export async function GET(req: NextRequest) {
             }, { status: 403 });
         }
 
+        const isMentor = mentorUsuarioId !== null && usuario.usuario_id === mentorUsuarioId;
+
         return NextResponse.json({
             authorized: true,
+            isMentor,
+            entrevistaId,
             user: {
                 email: usuario.email,
                 nome: usuario.nome,

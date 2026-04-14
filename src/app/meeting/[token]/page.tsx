@@ -15,6 +15,9 @@ import {
   Eye,
   EyeOff,
   X,
+  ClipboardList,
+  Send,
+  AlertCircle,
 } from "lucide-react";
 
 type AuthStatus = "checking" | "need_login" | "unauthorized" | "authorized" | "error";
@@ -28,6 +31,9 @@ interface McUser {
   usuario_id?: string;
 }
 
+/* ─────────────────────────────────────────────
+   LOGIN MODAL
+───────────────────────────────────────────── */
 function LoginModal({
   onSuccess,
   onClose,
@@ -56,8 +62,8 @@ function LoginModal({
       const user: McUser = data.user;
       localStorage.setItem("mc_user", JSON.stringify(user));
       onSuccess(user);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao fazer login.");
     } finally {
       setLoading(false);
     }
@@ -107,7 +113,6 @@ function LoginModal({
           <X size={20} />
         </button>
 
-        {/* Icon */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div
             style={{
@@ -123,23 +128,10 @@ function LoginModal({
           >
             <Target size={28} color="white" />
           </div>
-          <h2
-            style={{
-              fontSize: 22,
-              fontWeight: 700,
-              color: "#fff",
-              margin: 0,
-            }}
-          >
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: 0 }}>
             Login Necessário
           </h2>
-          <p
-            style={{
-              fontSize: 14,
-              color: "#888",
-              marginTop: 8,
-            }}
-          >
+          <p style={{ fontSize: 14, color: "#888", marginTop: 8 }}>
             Apenas participantes autorizados podem entrar nesta sala. Faça login
             com sua conta do Connect Skills.
           </p>
@@ -250,10 +242,7 @@ function LoginModal({
           </button>
 
           <div style={{ textAlign: "center", marginTop: 4 }}>
-            <a
-              href="/login"
-              style={{ fontSize: 13, color: "#60a5fa", textDecoration: "none" }}
-            >
+            <a href="/login" style={{ fontSize: 13, color: "#60a5fa", textDecoration: "none" }}>
               Entrar com Google / LinkedIn / Facebook →
             </a>
           </div>
@@ -263,9 +252,11 @@ function LoginModal({
   );
 }
 
+/* ─────────────────────────────────────────────
+   ACCESS DENIED
+───────────────────────────────────────────── */
 function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void }) {
   const router = useRouter();
-
   return (
     <div
       style={{
@@ -306,9 +297,7 @@ function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
           Acesso Negado
         </h1>
-        <p style={{ fontSize: 15, color: "#888", lineHeight: 1.6, marginBottom: 32 }}>
-          {reason}
-        </p>
+        <p style={{ fontSize: 15, color: "#888", lineHeight: 1.6, marginBottom: 32 }}>{reason}</p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <button
             onClick={onRetry}
@@ -346,6 +335,9 @@ function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void
   );
 }
 
+/* ─────────────────────────────────────────────
+   LOADING SCREEN
+───────────────────────────────────────────── */
 function LoadingScreen({ message }: { message: string }) {
   return (
     <div
@@ -376,6 +368,295 @@ function LoadingScreen({ message }: { message: string }) {
   );
 }
 
+/* FEEDBACK SIDEBAR (mentor only)*/
+type FeedbackStatus = "idle" | "sending" | "success" | "error";
+
+function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
+  const [comportamental, setComportamental] = useState("");
+  const [notaComportamental, setNotaComportamental] = useState<string>("");
+  const [tecnica, setTecnica] = useState("");
+  const [notaTecnica, setNotaTecnica] = useState<string>("");
+  const [geral, setGeral] = useState("");
+  const [notaGeral, setNotaGeral] = useState<string>("");
+  const [status, setStatus] = useState<FeedbackStatus>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const parseNota = (v: string) => { const n = parseInt(v, 10); return isNaN(n) ? null : n; };
+  const notaValida = (v: string) => { const n = parseNota(v); return n !== null && n >= 1 && n <= 100; };
+
+  const allFilled =
+    comportamental.trim() !== "" && notaValida(notaComportamental) &&
+    tecnica.trim() !== "" && notaValida(notaTecnica) &&
+    geral.trim() !== "" && notaValida(notaGeral);
+  const isSuccess = status === "success";
+
+  const handleSubmit = async () => {
+    if (!allFilled || !entrevistaId) return;
+    setStatus("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/meetings/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entrevistaId,
+          feedback_comportamental: comportamental.trim(),
+          nota_comportamental: parseNota(notaComportamental),
+          feedback_tecnico: tecnica.trim(),
+          nota_tecnica: parseNota(notaTecnica),
+          feedback_geral: geral.trim(),
+          nota_geral: parseNota(notaGeral),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Erro ao enviar avaliação.");
+      setStatus("success");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Erro ao enviar avaliação.");
+      setStatus("error");
+    }
+  };
+
+  const handleNotaChange = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9]/g, "");
+    if (raw === "") { setter(""); return; }
+    const n = parseInt(raw, 10);
+    if (n > 100) setter("100");
+    else setter(String(n));
+  };
+
+
+
+  const getTextareaClass = (val: string) => {
+    const base = "w-full bg-[#13141a] border rounded-[10px] text-slate-200 text-sm leading-[1.6] outline-none resize-y min-h-[90px] box-border transition-colors duration-200";
+    return val.trim() ? `${base} border-blue-600/30` : `${base} border-[#232530]`;
+  };
+
+  const getNotaClass = (val: string) => {
+    const valid = notaValida(val);
+    const base = "w-full bg-[#13141a] border rounded-[10px] text-slate-200 text-[15px] font-semibold outline-none box-border transition-colors duration-200";
+    if (val === "") return `${base} border-[#232530]`;
+    if (valid) return `${base} border-blue-600/30`;
+    return `${base} border-red-500/50`;
+  };
+
+  const textareaStyle: React.CSSProperties = { padding: "12px 16px" };
+  const inputStyle: React.CSSProperties = { padding: "10px 14px" };
+
+  return (
+    <div className="w-[340px] min-w-[340px] h-full bg-[#0c0d11] border-r border-[#1a1c24] flex flex-col overflow-hidden shrink-0">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-4 border-b border-[#1a1c24] bg-gradient-to-b from-[#10111a] to-[#0c0d11]">
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <div className="flex items-center justify-center w-8 h-8 rounded-[9px] bg-gradient-to-br from-blue-600/[0.13] to-cyan-500/[0.13] border border-blue-600/[0.27]">
+            <ClipboardList size={16} className="text-blue-400" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-slate-100">
+              Avaliação do Candidato
+            </div>
+            <div className="text-[11px] text-slate-500">Visível apenas para você</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Form area */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex flex-col gap-5" style={{ padding: "20px 20px 20px" }}>
+          {isSuccess ? (
+            /* ── success state ── */
+            <div className="flex flex-col items-center justify-center text-center gap-4 px-3 py-8">
+              <div className="w-16 h-16 rounded-full bg-green-500/[0.12] border border-green-500/30 flex items-center justify-center">
+                <CheckCircle size={30} className="text-green-500" />
+              </div>
+              <div>
+                <div className="text-base font-bold text-slate-100 mb-1.5">
+                  Avaliação Enviada!
+                </div>
+                <div className="text-[13px] text-slate-500 leading-relaxed">
+                  Seu feedback foi salvo com sucesso e estará disponível no relatório da entrevista.
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* ── form fields ── */
+            <>
+              {/* Comportamental — cabeçalho */}
+              <div>
+                <label className="text-xs font-bold tracking-[0.6px] uppercase text-slate-400 mb-1.5 block">
+                  Comportamental
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <p className="text-xs text-slate-500 mb-2 leading-snug">
+                  Comunicação, trabalho em equipe, postura profissional e proatividade.
+                </p>
+              </div>
+
+              {/* Comportamental — nota */}
+              <div className="mt-2.5">
+                <label className="text-[11px] text-slate-500 mb-1 block">
+                  Nota Comportamental (1 – 100)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="Ex: 85"
+                  value={notaComportamental}
+                  onChange={handleNotaChange(setNotaComportamental)}
+                  disabled={status === "sending"}
+                  className={getNotaClass(notaComportamental)}
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Comportamental — textarea */}
+              <div>
+                <textarea
+                  placeholder="Descreva o desempenho comportamental do candidato..."
+                  value={comportamental}
+                  onChange={(e) => setComportamental(e.target.value)}
+                  disabled={status === "sending"}
+                  className={getTextareaClass(comportamental)}
+                  style={textareaStyle}
+                />
+              </div>
+
+              {/* Técnica — cabeçalho */}
+              <div>
+                <label className="text-xs font-bold tracking-[0.6px] uppercase text-slate-400 mb-1.5 block">
+                  Técnica
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <p className="text-xs text-slate-500 mb-2 leading-snug">
+                  Conhecimentos técnicos, raciocínio lógico e resolução de problemas.
+                </p>
+              </div>
+
+              {/* Técnica — nota */}
+              <div className="mt-2">
+                <label className="text-[11px] text-slate-500 mb-1 block">
+                  Nota Técnica (1 – 100)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="Ex: 72"
+                  value={notaTecnica}
+                  onChange={handleNotaChange(setNotaTecnica)}
+                  disabled={status === "sending"}
+                  className={getNotaClass(notaTecnica)}
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Técnica — textarea */}
+              <div>
+                <textarea
+                  placeholder="Avalie as habilidades técnicas do candidato..."
+                  value={tecnica}
+                  onChange={(e) => setTecnica(e.target.value)}
+                  disabled={status === "sending"}
+                  className={getTextareaClass(tecnica)}
+                  style={textareaStyle}
+                />
+              </div>
+
+              {/* Geral — cabeçalho */}
+              <div>
+                <label className="text-xs font-bold tracking-[0.6px] uppercase text-slate-400 mb-1.5 block">
+                  Geral
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <p className="text-xs text-slate-500 mb-2 leading-snug">
+                  Impressão geral, adequação cultural e recomendação final.
+                </p>
+              </div>
+
+              {/* Geral — nota */}
+              <div className="mt-2.5">
+                <label className="text-[11px] text-slate-500 mb-0.5 block">
+                  Nota Geral (1 – 100)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="Ex: 90"
+                  value={notaGeral}
+                  onChange={handleNotaChange(setNotaGeral)}
+                  disabled={status === "sending"}
+                  className={getNotaClass(notaGeral)}
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Geral — textarea */}
+              <div>
+                <textarea
+                  placeholder="Deixe sua avaliação geral sobre o candidato..."
+                  value={geral}
+                  onChange={(e) => setGeral(e.target.value)}
+                  disabled={status === "sending"}
+                  className={getTextareaClass(geral)}
+                  style={textareaStyle}
+                />
+              </div>
+
+              {/* Error */}
+              {status === "error" && errorMsg && (
+                <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-[10px] bg-red-500/[0.08] border border-red-500/25 text-red-400 text-[13px]">
+                  <AlertCircle size={15} className="mt-px shrink-0" />
+                  {errorMsg}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Submit button */}
+      {!isSuccess && (
+        <div className="px-5 pt-4 pb-5 border-t border-[#1a1c24] mt-3">
+          {!allFilled && (
+            <p className="text-xs text-slate-500 mb-2.5 text-center">
+              Preencha os 3 campos e notas (1–100) para liberar o envio
+            </p>
+          )}
+          <button
+            onClick={handleSubmit}
+            disabled={!allFilled || status === "sending" || !entrevistaId}
+            className={[
+              "w-full py-[13px] rounded-xl text-sm font-bold",
+              "flex items-center justify-center gap-2",
+              "border-none transition-all duration-200",
+              allFilled && status !== "sending"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-[0_4px_20px_rgba(37,99,235,.3)] cursor-pointer"
+                : "bg-[#1a1c24] text-[#374151] cursor-not-allowed",
+            ].join(" ")}
+          >
+            {status === "sending" ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Send size={15} />
+                Enviar Avaliação
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   MAIN MEETING ROOM
+───────────────────────────────────────────── */
 function MeetingRoomInner() {
   const { token } = useParams<{ token: string }>();
   const searchParams = useSearchParams();
@@ -386,11 +667,12 @@ function MeetingRoomInner() {
   const jitsiApiRef = useRef<any>(null);
   const APP_ID = process.env.NEXT_PUBLIC_APP_ID;
 
-  // Auth state
   const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
   const [authReason, setAuthReason] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [authorizedUser, setAuthorizedUser] = useState<McUser | null>(null);
+  const [isMentor, setIsMentor] = useState(false);
+  const [entrevistaId, setEntrevistaId] = useState<string | null>(null);
 
   const runAuthCheck = async (user: McUser | null) => {
     if (!token) return;
@@ -410,6 +692,8 @@ function MeetingRoomInner() {
 
       if (data.authorized) {
         setAuthorizedUser(user);
+        setIsMentor(data.isMentor ?? false);
+        setEntrevistaId(data.entrevistaId ?? null);
         setAuthStatus("authorized");
       } else {
         setAuthReason(data.reason ?? "Acesso não permitido.");
@@ -451,10 +735,7 @@ function MeetingRoomInner() {
   };
 
   if (!token) return <LoadingScreen message="Identificando sala..." />;
-
-  if (authStatus === "checking") {
-    return <LoadingScreen message="Verificando autorização de acesso..." />;
-  }
+  if (authStatus === "checking") return <LoadingScreen message="Verificando autorização de acesso..." />;
 
   if (authStatus === "need_login") {
     return (
@@ -508,12 +789,10 @@ function MeetingRoomInner() {
   const roomName = `${APP_ID}/MentorshipConnect-Room-${token}`;
   const displayName = authorizedUser
     ? [authorizedUser.nome, authorizedUser.sobrenome].filter(Boolean).join(" ") ||
-    authorizedUser.email
+      authorizedUser.email
     : isHost
-      ? "Anfitrião"
-      : "Participante";
-
-
+    ? "Anfitrião"
+    : "Participante";
 
   return (
     <div
@@ -526,6 +805,7 @@ function MeetingRoomInner() {
         fontFamily: "'Inter', sans-serif",
       }}
     >
+      {/* ── Header ── */}
       <header
         style={{
           height: 64,
@@ -536,10 +816,21 @@ function MeetingRoomInner() {
           background: "#0e0f12",
           borderBottom: "1px solid #1a1b1f",
           flexShrink: 0,
+          zIndex: 10,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, #1DB5DA, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 10,
+              background: "linear-gradient(135deg, #1DB5DA, #06b6d4)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Target size={18} color="white" />
           </div>
           <div>
@@ -569,7 +860,21 @@ function MeetingRoomInner() {
                   ANFITRIÃO
                 </span>
               )}
-              {/* Authenticated badge */}
+              {isMentor && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    background: "rgba(168,85,247,.15)",
+                    color: "#c084fc",
+                    padding: "3px 10px",
+                    borderRadius: 20,
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  MENTOR
+                </span>
+              )}
               <span
                 style={{
                   fontSize: 10,
@@ -619,13 +924,9 @@ function MeetingRoomInner() {
               }}
             >
               {copied ? (
-                <>
-                  <CheckCircle size={16} /> Link Copiado!
-                </>
+                <><CheckCircle size={16} /> Link Copiado!</>
               ) : (
-                <>
-                  <Copy size={16} /> Compartilhar
-                </>
+                <><Copy size={16} /> Compartilhar</>
               )}
             </button>
           )}
@@ -651,81 +952,90 @@ function MeetingRoomInner() {
         </div>
       </header>
 
-      {/* ── Jitsi ── */}
-      <div style={{ flex: 1, position: "relative", width: "100%", background: "#0a0b0e" }}>
-        <JitsiMeeting
-          domain="8x8.vc"
-          roomName={roomName}
-          configOverwrite={{
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            prejoinPageEnabled: false, // disabled → nome vem do perfil
-            disableModeratorIndicator: false,
-            enableEmailInStats: false,
-            defaultLanguage: "ptBR",
-          }}
-          interfaceConfigOverwrite={{
-            DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-            SHOW_CHROME_EXTENSION_BANNER: false,
-            TOOLBAR_BUTTONS: [
-              "microphone",
-              "camera",
-              "closedcaptions",
-              "desktop",
-              "fullscreen",
-              "fodeviceselection",
-              "hangup",
-              "profile",
-              "chat",
-              "recording",
-              "livestreaming",
-              "etherpad",
-              "sharedvideo",
-              "settings",
-              "raisehand",
-              "videoquality",
-              "filmstrip",
-              "invite",
-              "feedback",
-              "stats",
-              "shortcuts",
-              "tileview",
-              "videobackgroundblur",
-              "download",
-              "help",
-              "mute-everyone",
-              "security",
-            ],
-          }}
-          userInfo={{
-            displayName,
-            email: authorizedUser?.email ?? "",
-          }}
-          onApiReady={(externalApi) => {
-            jitsiApiRef.current = externalApi;
+      {/* ── Body: sidebar + call ── */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
+        {/* Feedback sidebar — only visible to mentor */}
+        {isMentor && <FeedbackSidebar entrevistaId={entrevistaId} />}
 
-            if (isHost) {
-              externalApi.addListener("videoConferenceJoined", () => {
-                externalApi.executeCommand("toggleLobby", true);
+        {/* Jitsi call area */}
+        <div style={{ flex: 1, position: "relative", background: "#0a0b0e", minWidth: 0 }}>
+          <JitsiMeeting
+            domain="8x8.vc"
+            roomName={roomName}
+            configOverwrite={{
+              startWithAudioMuted: false,
+              startWithVideoMuted: false,
+              prejoinPageEnabled: false,
+              disableModeratorIndicator: false,
+              enableEmailInStats: false,
+              defaultLanguage: "ptBR",
+            }}
+            interfaceConfigOverwrite={{
+              DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+              SHOW_CHROME_EXTENSION_BANNER: false,
+              TOOLBAR_BUTTONS: [
+                "microphone",
+                "camera",
+                "closedcaptions",
+                "desktop",
+                "fullscreen",
+                "fodeviceselection",
+                "hangup",
+                "profile",
+                "chat",
+                "recording",
+                "livestreaming",
+                "etherpad",
+                "sharedvideo",
+                "settings",
+                "raisehand",
+                "videoquality",
+                "filmstrip",
+                "invite",
+                "feedback",
+                "stats",
+                "shortcuts",
+                "tileview",
+                "videobackgroundblur",
+                "download",
+                "help",
+                "mute-everyone",
+                "security",
+              ],
+            }}
+            userInfo={{
+              displayName,
+              email: authorizedUser?.email ?? "",
+            }}
+            onApiReady={(externalApi) => {
+              jitsiApiRef.current = externalApi;
+
+              if (isHost) {
+                externalApi.addListener("videoConferenceJoined", () => {
+                  externalApi.executeCommand("toggleLobby", true);
+                });
+              }
+
+              externalApi.addListener("videoConferenceLeft", () => {
+                router.push("/");
               });
-            }
-
-            externalApi.addListener("videoConferenceLeft", () => {
-              router.push("/");
-            });
-          }}
-          getIFrameRef={(iframeRef) => {
-            iframeRef.style.height = "100%";
-            iframeRef.style.width = "100%";
-            iframeRef.style.border = "none";
-          }}
-          spinner={() => <LoadingScreen message="Iniciando ambiente seguro..." />}
-        />
+            }}
+            getIFrameRef={(iframeRef) => {
+              iframeRef.style.height = "100%";
+              iframeRef.style.width = "100%";
+              iframeRef.style.border = "none";
+            }}
+            spinner={() => <LoadingScreen message="Iniciando ambiente seguro..." />}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
+/* ─────────────────────────────────────────────
+   PAGE EXPORT
+───────────────────────────────────────────── */
 export default function MeetingRoomPage() {
   return (
     <Suspense
