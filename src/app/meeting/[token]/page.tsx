@@ -673,6 +673,10 @@ function MeetingRoomInner() {
   const [authorizedUser, setAuthorizedUser] = useState<McUser | null>(null);
   const [isMentor, setIsMentor] = useState(false);
   const [entrevistaId, setEntrevistaId] = useState<string | null>(null);
+  const [hasJoined, setHasJoined] = useState(false);
+  const [meetingSchedule, setMeetingSchedule] = useState<{data: string, horaInicio: string, horaFim: string} | null>(null);
+  const [timeWarning, setTimeWarning] = useState<string | null>(null);
+  const [isMeetingOver, setIsMeetingOver] = useState(false);
 
   const runAuthCheck = async (user: McUser | null) => {
     if (!token) return;
@@ -694,6 +698,7 @@ function MeetingRoomInner() {
         setAuthorizedUser(user);
         setIsMentor(data.isMentor ?? false);
         setEntrevistaId(data.entrevistaId ?? null);
+        if (data.meetingSchedule?.data) setMeetingSchedule(data.meetingSchedule);
         setAuthStatus("authorized");
       } else {
         setAuthReason(data.reason ?? "Acesso não permitido.");
@@ -723,6 +728,52 @@ function MeetingRoomInner() {
     if (jitsiApiRef.current) jitsiApiRef.current.dispose();
     router.push("/");
   };
+
+  useEffect(() => {
+    if (!meetingSchedule || !meetingSchedule.data || !meetingSchedule.horaFim) return;
+
+    const [year, month, day] = meetingSchedule.data.split("-");
+    const [hFim, mFim] = meetingSchedule.horaFim.split(":");
+    if (!year || !hFim) return;
+
+    const endData = new Date(Number(year), Number(month) - 1, Number(day), Number(hFim), Number(mFim), 0);
+    const endMs = endData.getTime();
+
+    const checkTime = () => {
+      const nowMs = Date.now();
+      const diffMinutes = (endMs - nowMs) / 1000 / 60;
+      
+      if (diffMinutes <= -5) {
+         if (jitsiApiRef.current) jitsiApiRef.current.dispose();
+         setIsMeetingOver(true);
+         return true;
+      }
+
+      if (diffMinutes <= 5 && diffMinutes > 4.8) {
+         setTimeWarning("Aviso: A reunião será encerrada em 5 minutos.");
+      } else if (diffMinutes <= 10 && diffMinutes > 9.8) {
+         setTimeWarning("Aviso: A reunião será encerrada em 10 minutos.");
+      } else if (diffMinutes <= 30 && diffMinutes > 29.8) {
+         setTimeWarning("Aviso: A reunião será encerrada em 30 minutos.");
+      }
+      return false;
+    };
+
+    if (checkTime()) return;
+
+    const interval = setInterval(() => {
+      if (checkTime()) clearInterval(interval);
+    }, 10000); 
+
+    return () => clearInterval(interval);
+  }, [meetingSchedule]);
+
+  useEffect(() => {
+     if (timeWarning) {
+        const t = setTimeout(() => setTimeWarning(null), 12000);
+        return () => clearTimeout(t);
+     }
+  }, [timeWarning]);
 
   const handleLoginSuccess = (user: McUser) => {
     setShowLoginModal(false);
@@ -954,18 +1005,180 @@ function MeetingRoomInner() {
 
       {/* ── Body: sidebar + call ── */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
+        {/* Aviso flutuante de horário */}
+        {timeWarning && (
+          <div
+            style={{
+              position: "fixed",
+              top: 80,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 9999,
+              background: "#ef4444",
+              color: "white",
+              padding: "12px 24px",
+              borderRadius: "12px",
+              fontWeight: 600,
+              boxShadow: "0 10px 25px rgba(239, 68, 68, 0.4)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              animation: "fadeInDown 0.3s ease-out forwards",
+            }}
+          >
+            <AlertCircle size={20} />
+            {timeWarning}
+            <button 
+               onClick={() => setTimeWarning(null)} 
+               style={{ background: "transparent", border: "none", color: "white", cursor: "pointer", marginLeft: "12px" }}
+            >
+               <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* Feedback sidebar — only visible to mentor */}
         {isMentor && <FeedbackSidebar entrevistaId={entrevistaId} />}
 
         {/* Jitsi call area */}
-        <div style={{ flex: 1, position: "relative", background: "#0a0b0e", minWidth: 0 }}>
-          <JitsiMeeting
-            domain="8x8.vc"
-            roomName={roomName}
-            configOverwrite={{
-              startWithAudioMuted: false,
-              startWithVideoMuted: false,
-              prejoinPageEnabled: false,
+        <div style={{ flex: 1, position: "relative", background: "#ffffffff", minWidth: 0 }}>
+          {isMeetingOver ? (
+            <div style={{ position: "absolute", inset: 0, backgroundColor: "#08090c", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 30 }}>
+              <div style={{ backgroundColor: "#1c1f26", padding: "40px", borderRadius: "16px", textAlign: "center", maxWidth: "480px", border: "1px solid #27272a" }}>
+                  <div style={{ 
+                     width: 64, height: 64, borderRadius: 32, backgroundColor: "rgba(239, 68, 68, 0.1)", 
+                     color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" 
+                  }}>
+                     <AlertCircle size={32} />
+                  </div>
+                  <h2 style={{ color: "#fff", fontSize: "24px", marginBottom: "16px", fontWeight: 700 }}>A Reunião foi Encerrada</h2>
+                  <p style={{ color: "#a1a1aa", fontSize: "15px", marginBottom: "24px", lineHeight: 1.6 }}>
+                    O tempo limite destinado a esta reunião foi excedido em 5 minutos e a sala foi desligada automaticamente.
+                  </p>
+                  <p style={{ color: "#fff", fontSize: "16px", marginBottom: "24px", fontWeight: 500 }}>
+                    Como você deseja continuar:
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", gap: "32px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                      <button
+                        onClick={() => {
+                           const baseUrl = process.env.NEXT_PUBLIC_CONNECT_SKILLS_URL || "http://localhost:3000";
+                           window.location.href = isMentor ? `${baseUrl}/mentor/dashboard` : `${baseUrl}/candidate/dashboard`;
+                        }}
+                        style={{
+                          width: "80px", height: "80px", borderRadius: "50%", background: "#ffffffff",
+                          border: "2px solid #27272a", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s"
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                        onMouseOut={(e) => (e.currentTarget.style.borderColor = "#27272a")}
+                        title="Ir para Connect Skills"
+                      >
+                        <img src="/logos/cs-icon.png" alt="Connect Skills" style={{ width: "60px", height: "60px", objectFit: "contain" }} />
+                      </button>
+                      <span style={{ color: "#a1a1aa", fontSize: "14px", fontWeight: 500 }}>Connect Skills</span>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                      <button
+                        onClick={() => {
+                           window.location.href = "/";
+                        }}
+                        style={{
+                          width: "80px", height: "80px", borderRadius: "50%", background: "#ffffffff",
+                          border: "2px solid #27272a", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s"
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.borderColor = "#06b6d4")}
+                        onMouseOut={(e) => (e.currentTarget.style.borderColor = "#27272a")}
+                        title="Ir para Mentor Connect"
+                      >
+                        <img src="/logos/mentor.ai.png" alt="Mentor Connect" style={{ width: "65px", height: "65px", borderRadius: "20px", objectFit: "contain" }} />
+                      </button>
+                      <span style={{ color: "#a1a1aa", fontSize: "14px", fontWeight: 500 }}>Meetor.ai</span>
+                    </div>
+                  </div>
+              </div>
+            </div>
+          ) : !hasJoined ? (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#08090c",
+                zIndex: 20,
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: 400,
+                  background: "#13141a",
+                  borderRadius: 16,
+                  border: "1px solid #1e2029",
+                  padding: "40px",
+                  textAlign: "center",
+                  boxShadow: "0 24px 48px rgba(0,0,0,0.4)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #1DB5DA, #06b6d4)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: "white",
+                    margin: "0 auto 20px",
+                  }}
+                >
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+                  Pronto para entrar?
+                </h2>
+                <p style={{ fontSize: 14, color: "#888", marginBottom: 32 }}>
+                  {displayName}
+                </p>
+                <button
+                  onClick={() => setHasJoined(true)}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: 10,
+                    background: "linear-gradient(135deg, #1DB5DA, #06b6d4)",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: 16,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "opacity 0.2s",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
+                  onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+                >
+                  Entrar na Reunião
+                </button>
+              </div>
+            </div>
+          ) : (
+            <JitsiMeeting
+              domain="8x8.vc"
+              roomName={roomName}
+              configOverwrite={{
+                startWithAudioMuted: false,
+                startWithVideoMuted: false,
+                prejoinConfig: {
+                  enabled: false,
+                },
+              readOnlyName: true,
+              disableProfile: true,
               disableModeratorIndicator: false,
               enableEmailInStats: false,
               defaultLanguage: "ptBR",
@@ -1027,6 +1240,7 @@ function MeetingRoomInner() {
             }}
             spinner={() => <LoadingScreen message="Iniciando ambiente seguro..." />}
           />
+          )}
         </div>
       </div>
     </div>

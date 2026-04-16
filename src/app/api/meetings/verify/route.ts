@@ -46,6 +46,9 @@ export async function GET(req: NextRequest) {
         let authorizedUsuarioIds: string[] = [];
         let mentorUsuarioId: string | null = null;
         let entrevistaId: string | null = null;
+        let meetingData: string | null = null;
+        let horaInicio: string | null = null;
+        let horaFim: string | null = null;
 
         try {
             const csRes = await fetch(
@@ -61,6 +64,9 @@ export async function GET(req: NextRequest) {
                 authorizedUsuarioIds = csData.authorizedUsuarioIds ?? [];
                 mentorUsuarioId = csData.mentorUsuarioId ?? null;
                 entrevistaId = csData.entrevistaId ?? null;
+                meetingData = csData.data ?? null;
+                horaInicio = csData.hora_inicio ?? null;
+                horaFim = csData.hora_fim ?? null;
             } else if (csRes.status === 404) {
                 authorizedUsuarioIds = [reuniao.criado_por];
             } else {
@@ -87,6 +93,11 @@ export async function GET(req: NextRequest) {
             authorized: true,
             isMentor,
             entrevistaId,
+            meetingSchedule: {
+                data: meetingData,
+                horaInicio,
+                horaFim,
+            },
             user: {
                 email: usuario.email,
                 nome: usuario.nome,
