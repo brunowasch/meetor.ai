@@ -678,6 +678,28 @@ function MeetingRoomInner() {
   const [timeWarning, setTimeWarning] = useState<string | null>(null);
   const [isMeetingOver, setIsMeetingOver] = useState(false);
 
+  // Controle de comparecimento
+  const [candidateJoinedForMentor, setCandidateJoinedForMentor] = useState(false);
+  const [showMarkAbsentButton, setShowMarkAbsentButton] = useState(false);
+  const [absentMarked, setAbsentMarked] = useState(false);
+  const mentorJoinTimeRef = useRef<number | null>(null);
+  const candidateJoinedRef = useRef(false);
+  const absentMarkedRef = useRef(false);
+
+  const handleCandidateAttendance = async (action: "join" | "leave" | "mark_absent_by_mentor" | "mark_absent_auto") => {
+    if (!entrevistaId) return;
+    try {
+      await fetch("/api/meetings/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entrevistaId, action }),
+        keepalive: true
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const runAuthCheck = async (user: McUser | null) => {
     if (!token) return;
 
@@ -746,6 +768,10 @@ function MeetingRoomInner() {
       if (diffMinutes <= -5) {
          if (jitsiApiRef.current) jitsiApiRef.current.dispose();
          setIsMeetingOver(true);
+         
+         if (isMentor && !candidateJoinedRef.current && !absentMarkedRef.current) {
+             handleCandidateAttendance("mark_absent_auto");
+         }
          return true;
       }
 
@@ -774,6 +800,25 @@ function MeetingRoomInner() {
         return () => clearTimeout(t);
      }
   }, [timeWarning]);
+
+  useEffect(() => {
+    if (!hasJoined || !isMentor || candidateJoinedForMentor || absentMarked || isMeetingOver) return;
+
+    if (!mentorJoinTimeRef.current) {
+      mentorJoinTimeRef.current = Date.now();
+    }
+
+    const interval = setInterval(() => {
+      if (mentorJoinTimeRef.current) {
+         const diffMin = (Date.now() - mentorJoinTimeRef.current) / 1000 / 60;
+         if (diffMin >= 10 && !candidateJoinedRef.current && !absentMarkedRef.current) {
+            setShowMarkAbsentButton(true);
+         }
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [hasJoined, isMentor, candidateJoinedForMentor, absentMarked, isMeetingOver]);
 
   const handleLoginSuccess = (user: McUser) => {
     setShowLoginModal(false);
@@ -1042,6 +1087,22 @@ function MeetingRoomInner() {
 
         {/* Jitsi call area */}
         <div style={{ flex: 1, position: "relative", background: "#ffffffff", minWidth: 0 }}>
+          {hasJoined && isMentor && showMarkAbsentButton && !candidateJoinedForMentor && !absentMarked && !isMeetingOver && (
+             <div style={{ position: "absolute", top: 20, right: 20, zIndex: 40, background: "#1c1f26", padding: 16, borderRadius: 12, border: "1px solid rgba(239, 68, 68, 0.3)", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+                <p style={{ color: "white", fontSize: 13, marginBottom: 12, maxWidth: 200, lineHeight: 1.4 }}>O candidato ainda não entrou na sala.</p>
+                <button 
+                   onClick={() => {
+                       setAbsentMarked(true);
+                       absentMarkedRef.current = true;
+                       setShowMarkAbsentButton(false);
+                       handleCandidateAttendance("mark_absent_by_mentor");
+                   }}
+                   style={{ background: "#ef4444", color: "white", padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: "bold", border: "none", cursor: "pointer", width: "100%" }}
+                >
+                  Marcar "Não Compareceu"
+                </button>
+             </div>
+          )}
           {isMeetingOver ? (
             <div style={{ position: "absolute", inset: 0, backgroundColor: "#08090c", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 30 }}>
               <div style={{ backgroundColor: "#1c1f26", padding: "40px", borderRadius: "16px", textAlign: "center", maxWidth: "480px", border: "1px solid #27272a" }}>
@@ -1223,13 +1284,34 @@ function MeetingRoomInner() {
             onApiReady={(externalApi) => {
               jitsiApiRef.current = externalApi;
 
-              if (isHost) {
-                externalApi.addListener("videoConferenceJoined", () => {
+              externalApi.addListener("videoConferenceJoined", () => {
+                if (isHost) {
                   externalApi.executeCommand("toggleLobby", true);
-                });
-              }
+                }
+                if (!isMentor) {
+                  handleCandidateAttendance("join");
+                } else {
+                  const participants = externalApi.getNumberOfParticipants();
+                  if (participants > 1) {
+                     setCandidateJoinedForMentor(true);
+                     candidateJoinedRef.current = true;
+                     setShowMarkAbsentButton(false);
+                  }
+                }
+              });
+
+              externalApi.addListener("participantJoined", () => {
+                 if (isMentor) {
+                    setCandidateJoinedForMentor(true);
+                    candidateJoinedRef.current = true;
+                    setShowMarkAbsentButton(false);
+                 }
+              });
 
               externalApi.addListener("videoConferenceLeft", () => {
+                if (!isMentor && entrevistaId) {
+                   navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ entrevistaId, action: "leave" }));
+                }
                 router.push("/");
               });
             }}
