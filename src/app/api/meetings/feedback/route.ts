@@ -19,20 +19,20 @@ export async function POST(req: NextRequest) {
         if (!feedback_comportamental?.trim()) {
             return NextResponse.json({ error: "Feedback Comportamental é obrigatório." }, { status: 400 });
         }
-        if (nota_comportamental === undefined || nota_comportamental < 1 || nota_comportamental > 100) {
-            return NextResponse.json({ error: "Nota Comportamental deve ser entre 1 e 100." }, { status: 400 });
+        if (nota_comportamental === undefined || nota_comportamental < 0 || nota_comportamental > 100) {
+            return NextResponse.json({ error: "Nota Comportamental deve ser entre 0 e 100." }, { status: 400 });
         }
         if (!feedback_tecnico?.trim()) {
             return NextResponse.json({ error: "Feedback Técnico é obrigatório." }, { status: 400 });
         }
-        if (nota_tecnica === undefined || nota_tecnica < 1 || nota_tecnica > 100) {
-            return NextResponse.json({ error: "Nota Técnica deve ser entre 1 e 100." }, { status: 400 });
+        if (nota_tecnica === undefined || nota_tecnica < 0 || nota_tecnica > 100) {
+            return NextResponse.json({ error: "Nota Técnica deve ser entre 0 e 100." }, { status: 400 });
         }
         if (!feedback_geral?.trim()) {
             return NextResponse.json({ error: "Feedback Geral é obrigatório." }, { status: 400 });
         }
-        if (nota_geral === undefined || nota_geral < 1 || nota_geral > 100) {
-            return NextResponse.json({ error: "Nota Geral deve ser entre 1 e 100." }, { status: 400 });
+        if (nota_geral === undefined || nota_geral < 0 || nota_geral > 100) {
+            return NextResponse.json({ error: "Nota Geral deve ser entre 0 e 100." }, { status: 400 });
         }
 
         const connectSkillsUrl = process.env.CONNECT_SKILLS_URL?.replace(/\/$/, "");

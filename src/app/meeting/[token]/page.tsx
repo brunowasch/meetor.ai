@@ -18,9 +18,10 @@ import {
   ClipboardList,
   Send,
   AlertCircle,
+  User,
 } from "lucide-react";
 
-type AuthStatus = "checking" | "need_login" | "unauthorized" | "authorized" | "error";
+type AuthStatus = "checking" | "need_login" | "unauthorized" | "authorized" | "error" | "expired";
 
 interface McUser {
   email: string;
@@ -116,17 +117,16 @@ function LoginModal({
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div
             style={{
-              display: "inline-flex",
-              alignItems: "center",
+              display: "flex",
               justifyContent: "center",
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              background: "linear-gradient(135deg, #2563eb, #06b6d4)",
               marginBottom: 16,
             }}
           >
-            <Target size={28} color="white" />
+            <img 
+              src="/logos/mentor.ai.png" 
+              alt="meetor.ai logo" 
+              style={{ height: 48, objectFit: "contain" }}
+            />
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: 0 }}>
             Login Necessário
@@ -247,6 +247,102 @@ function LoginModal({
             </a>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   EXPIRED SCREEN
+───────────────────────────────────────────── */
+function ExpiredScreen({ isMentor }: { isMentor: boolean }) {
+  const baseUrl = process.env.NEXT_PUBLIC_CONNECT_SKILLS_URL || "http://localhost:3000";
+  return (
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#08090c",
+        fontFamily: "'Inter', sans-serif",
+        padding: 24,
+      }}
+    >
+      <div
+        style={{
+          textAlign: "center",
+          maxWidth: 480,
+          padding: "48px 40px",
+          background: "#0e0f12",
+          borderRadius: 20,
+          border: "1px solid rgba(107,114,128,.25)",
+          boxShadow: "0 0 48px rgba(0,0,0,0.5)",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 72,
+            height: 72,
+            borderRadius: "50%",
+            background: "rgba(107,114,128,.12)",
+            marginBottom: 24,
+          }}
+        >
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
+          Link Expirado
+        </h1>
+        <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7, marginBottom: 36 }}>
+          O tempo desta reunião já passou. Este link não está mais disponível para acesso.
+          <br />
+          <span style={{ fontSize: 13, color: "#4b5563", marginTop: 8, display: "block" }}>
+            Se precisar agendar uma nova sessão, acesse o Connect Skills.
+          </span>
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={() => {
+              window.location.href = isMentor
+                ? `${baseUrl}/mentor/availability`
+                : `${baseUrl}/candidate/mentorships`;
+            }}
+            style={{
+              padding: "13px 28px",
+              borderRadius: 12,
+              background: "linear-gradient(135deg, #2563eb, #06b6d4)",
+              border: "none",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {isMentor ? "Ver Minhas Mentorias" : "Ver Minhas Mentorias"}
+          </button>
+          <button
+            onClick={() => window.location.href = "/"}
+            style={{
+              padding: "13px 28px",
+              borderRadius: 12,
+              background: "#1e2029",
+              border: "1px solid #2a2c36",
+              color: "#9ca3af",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Página Inicial
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -382,7 +478,7 @@ function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   const parseNota = (v: string) => { const n = parseInt(v, 10); return isNaN(n) ? null : n; };
-  const notaValida = (v: string) => { const n = parseNota(v); return n !== null && n >= 1 && n <= 100; };
+  const notaValida = (v: string) => { const n = parseNota(v); return n !== null && n >= 0 && n <= 100; };
 
   const allFilled =
     comportamental.trim() !== "" && notaValida(notaComportamental) &&
@@ -495,11 +591,11 @@ function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
               {/* Comportamental — nota */}
               <div className="mt-2.5">
                 <label className="text-[11px] text-slate-500 mb-1 block">
-                  Nota Comportamental (1 – 100)
+                  Nota Comportamental (0 – 100)
                 </label>
                 <input
                   type="number"
-                  min={1}
+                  min={0}
                   max={100}
                   placeholder="Ex: 85"
                   value={notaComportamental}
@@ -536,11 +632,11 @@ function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
               {/* Técnica — nota */}
               <div className="mt-2">
                 <label className="text-[11px] text-slate-500 mb-1 block">
-                  Nota Técnica (1 – 100)
+                  Nota Técnica (0 – 100)
                 </label>
                 <input
                   type="number"
-                  min={1}
+                  min={0}
                   max={100}
                   placeholder="Ex: 72"
                   value={notaTecnica}
@@ -577,11 +673,11 @@ function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
               {/* Geral — nota */}
               <div className="mt-2.5">
                 <label className="text-[11px] text-slate-500 mb-0.5 block">
-                  Nota Geral (1 – 100)
+                  Nota Geral (0 – 100)
                 </label>
                 <input
                   type="number"
-                  min={1}
+                  min={0}
                   max={100}
                   placeholder="Ex: 90"
                   value={notaGeral}
@@ -621,7 +717,7 @@ function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
         <div className="px-5 pt-4 pb-5 border-t border-[#1a1c24] mt-3">
           {!allFilled && (
             <p className="text-xs text-slate-500 mb-2.5 text-center">
-              Preencha os 3 campos e notas (1–100) para liberar o envio
+              Preencha os 3 campos e notas (0–100) para liberar o envio
             </p>
           )}
           <button
@@ -654,9 +750,6 @@ function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   MAIN MEETING ROOM
-───────────────────────────────────────────── */
 function MeetingRoomInner() {
   const { token } = useParams<{ token: string }>();
   const searchParams = useSearchParams();
@@ -717,6 +810,11 @@ function MeetingRoomInner() {
       const data = await res.json();
 
       if (data.authorized) {
+        if (data.isExpired) {
+          setIsMentor(data.isMentor ?? false);
+          setAuthStatus("expired");
+          return;
+        }
         setAuthorizedUser(user);
         setIsMentor(data.isMentor ?? false);
         setEntrevistaId(data.entrevistaId ?? null);
@@ -832,6 +930,7 @@ function MeetingRoomInner() {
 
   if (!token) return <LoadingScreen message="Identificando sala..." />;
   if (authStatus === "checking") return <LoadingScreen message="Verificando autorização de acesso..." />;
+  if (authStatus === "expired") return <ExpiredScreen isMentor={isMentor} />;
 
   if (authStatus === "need_login") {
     return (
@@ -1189,17 +1288,25 @@ function MeetingRoomInner() {
                     width: 64,
                     height: 64,
                     borderRadius: "50%",
-                    background: "linear-gradient(135deg, #1DB5DA, #06b6d4)",
+                    background: authorizedUser?.foto_perfil ? "transparent" : "linear-gradient(135deg, #1DB5DA, #06b6d4)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 24,
-                    fontWeight: "bold",
                     color: "white",
                     margin: "0 auto 20px",
+                    overflow: "hidden",
+                    border: authorizedUser?.foto_perfil ? "2px solid #1DB5DA" : "none"
                   }}
                 >
-                  {displayName.charAt(0).toUpperCase()}
+                  {authorizedUser?.foto_perfil ? (
+                    <img 
+                      src={authorizedUser.foto_perfil} 
+                      alt={displayName} 
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                    />
+                  ) : (
+                    <User size={32} color="#fff" />
+                  )}
                 </div>
                 <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
                   Pronto para entrar?

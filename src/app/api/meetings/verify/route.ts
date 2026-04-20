@@ -87,10 +87,23 @@ export async function GET(req: NextRequest) {
             }, { status: 403 });
         }
 
+        let isExpired = false;
+        if (meetingData && horaFim) {
+            try {
+                const [year, month, day] = meetingData.split("-").map(Number);
+                const [h, m] = horaFim.split(":").map(Number);
+                const endTime = new Date(year, month - 1, day, h, m, 0);
+                const gracePeriodMs = 5 * 60 * 1000;
+                isExpired = Date.now() > endTime.getTime() + gracePeriodMs;
+            } catch {
+            }
+        }
+
         const isMentor = mentorUsuarioId !== null && usuario.usuario_id === mentorUsuarioId;
 
         return NextResponse.json({
             authorized: true,
+            isExpired,
             isMentor,
             entrevistaId,
             meetingSchedule: {
