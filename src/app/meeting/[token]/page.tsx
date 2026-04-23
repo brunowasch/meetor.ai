@@ -467,7 +467,13 @@ function LoadingScreen({ message }: { message: string }) {
 /* FEEDBACK SIDEBAR (mentor only)*/
 type FeedbackStatus = "idle" | "sending" | "success" | "error";
 
-function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
+function FeedbackSidebar({
+  entrevistaId,
+  onFeedbackSent,
+}: {
+  entrevistaId: string | null;
+  onFeedbackSent: () => void;
+}) {
   const [comportamental, setComportamental] = useState("");
   const [notaComportamental, setNotaComportamental] = useState<string>("");
   const [tecnica, setTecnica] = useState("");
@@ -507,6 +513,8 @@ function FeedbackSidebar({ entrevistaId }: { entrevistaId: string | null }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao enviar avaliação.");
       setStatus("success");
+      // Notifica o componente pai que o feedback foi enviado com sucesso
+      onFeedbackSent();
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Erro ao enviar avaliação.");
       setStatus("error");
@@ -771,6 +779,20 @@ function MeetingRoomInner() {
   const [timeWarning, setTimeWarning] = useState<string | null>(null);
   const [isMeetingOver, setIsMeetingOver] = useState(false);
 
+  // Controla se o mentor já enviou o feedback — usado para marcar a reunião como CONCLUIDA ao sair
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const feedbackSentRef = useRef(false);
+
+  const handleFeedbackSent = () => {
+    feedbackSentRef.current = true;
+    setFeedbackSent(true);
+  };
+
+  // Encerra a reunião no backend (marca como CONCLUIDA) quando o feedback já foi enviado
+  const markMeetingEnded = (id: string) => {
+    navigator.sendBeacon("/api/meetings/end", JSON.stringify({ entrevistaId: id }));
+  };
+
   // Controle de comparecimento
   const [candidateJoinedForMentor, setCandidateJoinedForMentor] = useState(false);
   const [showMarkAbsentButton, setShowMarkAbsentButton] = useState(false);
@@ -845,6 +867,9 @@ function MeetingRoomInner() {
   };
 
   const leaveRoom = () => {
+    if (feedbackSentRef.current && entrevistaId) {
+      markMeetingEnded(entrevistaId);
+    }
     if (jitsiApiRef.current) jitsiApiRef.current.dispose();
     router.push("/");
   };
@@ -1182,7 +1207,7 @@ function MeetingRoomInner() {
         )}
 
         {/* Feedback sidebar — only visible to mentor */}
-        {isMentor && <FeedbackSidebar entrevistaId={entrevistaId} />}
+        {isMentor && <FeedbackSidebar entrevistaId={entrevistaId} onFeedbackSent={handleFeedbackSent} />}
 
         {/* Jitsi call area */}
         <div style={{ flex: 1, position: "relative", background: "#ffffffff", minWidth: 0 }}>
@@ -1418,6 +1443,10 @@ function MeetingRoomInner() {
               externalApi.addListener("videoConferenceLeft", () => {
                 if (!isMentor && entrevistaId) {
                    navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ entrevistaId, action: "leave" }));
+                }
+                // Se o mentor saiu com feedback já enviado, marca como CONCLUIDA
+                if (isMentor && feedbackSentRef.current && entrevistaId) {
+                  navigator.sendBeacon("/api/meetings/end", JSON.stringify({ entrevistaId }));
                 }
                 router.push("/");
               });
