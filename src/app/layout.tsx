@@ -20,12 +20,18 @@ export const metadata: Metadata = {
   },
 };
 
+import { I18nProvider } from "./_components/Providers/I18nProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={inter.variable}>
-      <body>{children}</body>
+      <body>
+        <I18nProvider>
+          {children}
+        </I18nProvider>
+      </body>
     </html>
   );
 }

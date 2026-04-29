@@ -1,0 +1,118 @@
+{
+  "landing": {
+    "title1": "Videollamadas en",
+    "title2": "Tiempo Real",
+    "subtitle": "Sin registro, sin descargas necesarias. ¡Crea tu enlace único, compártelo con tu invitado y conversen libremente con total privacidad!",
+    "createMeeting": "Crear Reunión Ahora",
+    "generating": "Generando Enlace...",
+    "joinWithLink": "Entrar con Enlace",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "joinModal": {
+      "title": "Entrar a una Reunión",
+      "desc": "Pega el enlace compartido por el anfitrión o el ID de la sala para entrar de inmediato.",
+      "placeholder": "Ej: https://.../meeting/abc12345",
+      "button": "Entrar a la Sala"
+    },
+    "logoutModal": {
+      "title": "¿Cerrar sesión?",
+      "desc": "¿Estás seguro de que deseas cerrar sesión ahora? Tendrás que volver a iniciar sesión para acceder a tus próximas llamadas.",
+      "cancel": "Cancelar",
+      "confirm": "Sí, salir"
+    },
+    "registerModal": {
+      "title": "Cuenta Necesaria",
+      "desc": "Solo los usuarios de Connect Skills pueden crear nuevas salas de reuniones. Si no tienes una cuenta, ¡regístrate ahora mismo!",
+      "button": "Registrarse en Connect Skills",
+      "cancel": "Cancelar"
+    }
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "Ingresa tu correo electrónico",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "keepLogin": "Mantener sesión iniciada",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "entering": "Entrando...",
+    "enter": "Iniciar Sesión",
+    "or": "o",
+    "google": "Continuar con Google",
+    "linkedin": "Continuar con LinkedIn",
+    "facebook": "Continuar con Facebook",
+    "noAccount": "¿No tienes una cuenta?",
+    "register": "Regístrate",
+    "backHome": "Volver al inicio",
+    "errors": {
+      "accountNotFound": "Tu cuenta no fue encontrada en Connect Skills. Regístrate primero en Connect Skills.",
+      "userNotFound": "Usuario no encontrado. Si te registraste por red social, intenta iniciar sesión por la red."
+    }
+  },
+  "meeting": {
+    "loginModal": {
+      "title": "Inicio de Sesión Necesario",
+      "desc": "Solo los participantes autorizados pueden entrar en esta sala. Por favor, inicia sesión con tu cuenta de Connect Skills.",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "••••••••",
+      "entering": "Entrando...",
+      "enter": "Iniciar Sesión",
+      "socialLogin": "Iniciar sesión con Google / LinkedIn / Facebook →"
+    },
+    "expired": {
+      "title": "Enlace Caducado",
+      "desc": "El tiempo de esta reunión ha pasado. Este enlace ya no está disponible.",
+      "subDesc": "Si necesitas programar una nueva sesión, ve a Connect Skills.",
+      "mentorButton": "Ver Mis Mentorías",
+      "candidateButton": "Ver Mis Mentorías",
+      "homeButton": "Página Principal"
+    },
+    "accessDenied": {
+      "title": "Acceso Denegado",
+      "retry": "Intentar de nuevo",
+      "homeButton": "Volver al Inicio"
+    },
+    "sidebar": {
+      "title": "Evaluación del Candidato",
+      "subtitle": "Visible solo para ti",
+      "behavioral": "Comportamental",
+      "behavioralDesc": "Comunicación, trabajo en equipo, postura profesional y proactividad.",
+      "behavioralScore": "Puntuación Comportamental (0 – 100)",
+      "behavioralPlaceholder": "Describe el desempeño comportamental del candidato...",
+      "technical": "Técnico",
+      "technicalDesc": "Conocimientos técnicos, razonamiento lógico y resolución de problemas.",
+      "technicalScore": "Puntuación Técnica (0 – 100)",
+      "technicalPlaceholder": "Evalúa las habilidades técnicas del candidato...",
+      "general": "General",
+      "generalDesc": "Impresión general, adaptación cultural y recomendación final.",
+      "generalScore": "Puntuación General (0 – 100)",
+      "generalPlaceholder": "Deja tu evaluación general sobre el candidato...",
+      "fillAll": "Llena los 3 campos y puntuaciones (0–100) para enviar",
+      "sending": "Enviando...",
+      "send": "Enviar Evaluación",
+      "successTitle": "¡Evaluación Enviada!",
+      "successDesc": "Tu comentario fue guardado con éxito y estará disponible en el informe de la entrevista."
+    },
+    "interface": {
+      "copyLink": "Copiar Enlace",
+      "copied": "¡Copiado!",
+      "feedbackRequired": "Evaluación Pendiente",
+      "feedbackRequiredDesc": "Para finalizar, envía la evaluación",
+      "endMeeting": "Finalizar Reunión",
+      "candidateAbsent": "Candidato Ausente",
+      "markAbsent": "Marcar Ausencia",
+      "timeRemaining": "Restan",
+      "minutes": "min",
+      "leaveMeeting": "Salir de la Sala",
+      "evaluating": "Evaluando:",
+      "waitingCandidate": "Esperando..."
+    }
+  },
+  "languages": [
+    "Portugués",
+    "Inglés",
+    "Español"
+  ]
+}

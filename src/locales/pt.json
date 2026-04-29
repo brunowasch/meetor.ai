@@ -1,0 +1,118 @@
+{
+  "landing": {
+    "title1": "Videochamadas em",
+    "title2": "Tempo Real",
+    "subtitle": "Nenhum cadastro, nenhum download necessário. Crie o seu link único, compartilhe com o convidado e conversem livremente com total privacidade!",
+    "createMeeting": "Criar Reunião Agora",
+    "generating": "Gerando Link...",
+    "joinWithLink": "Entrar com Link",
+    "login": "Fazer Login",
+    "logout": "Sair",
+    "joinModal": {
+      "title": "Entrar em uma Reunião",
+      "desc": "Cole o link compartilhado pelo anfitrião ou o ID da sala para entrar imediatamente.",
+      "placeholder": "Ex: https://.../meeting/abc12345",
+      "button": "Entrar na Sala"
+    },
+    "logoutModal": {
+      "title": "Sair da conta?",
+      "desc": "Tem certeza que deseja sair agora? Você precisará fazer login novamente para acessar suas próximas chamadas.",
+      "cancel": "Cancelar",
+      "confirm": "Sim, sair"
+    },
+    "registerModal": {
+      "title": "Conta Necessária",
+      "desc": "Apenas usuários do Connect Skills podem criar novas salas de reunião. Se você não tem uma conta, cadastre-se agora mesmo!",
+      "button": "Cadastrar no Connect Skills",
+      "cancel": "Cancelar"
+    }
+  },
+  "login": {
+    "title": "Login",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "Digite seu e-mail",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "Digite sua senha",
+    "keepLogin": "Manter login",
+    "forgotPassword": "Esqueceu a senha?",
+    "entering": "Entrando...",
+    "enter": "Entrar",
+    "or": "ou",
+    "google": "Entrar com Google",
+    "linkedin": "Entrar com LinkedIn",
+    "facebook": "Entrar com Facebook",
+    "noAccount": "Não tem uma conta?",
+    "register": "Cadastre-se",
+    "backHome": "Voltar ao início",
+    "errors": {
+      "accountNotFound": "Sua conta não foi encontrada no Connect Skills. Cadastre-se primeiro no Connect Skills.",
+      "userNotFound": "Usuário não encontrado. Se você registrou via social, tente logar pela rede."
+    }
+  },
+  "meeting": {
+    "loginModal": {
+      "title": "Login Necessário",
+      "desc": "Apenas participantes autorizados podem entrar nesta sala. Faça login com sua conta do Connect Skills.",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "seu@email.com",
+      "passwordLabel": "Senha",
+      "passwordPlaceholder": "••••••••",
+      "entering": "Entrando...",
+      "enter": "Entrar",
+      "socialLogin": "Entrar com Google / LinkedIn / Facebook →"
+    },
+    "expired": {
+      "title": "Link Expirado",
+      "desc": "O tempo desta reunião já passou. Este link não está mais disponível para acesso.",
+      "subDesc": "Se precisar agendar uma nova sessão, acesse o Connect Skills.",
+      "mentorButton": "Ver Minhas Mentorias",
+      "candidateButton": "Ver Minhas Mentorias",
+      "homeButton": "Página Inicial"
+    },
+    "accessDenied": {
+      "title": "Acesso Negado",
+      "retry": "Tentar novamente",
+      "homeButton": "Voltar ao Início"
+    },
+    "sidebar": {
+      "title": "Avaliação do Candidato",
+      "subtitle": "Visível apenas para você",
+      "behavioral": "Comportamental",
+      "behavioralDesc": "Comunicação, trabalho em equipe, postura profissional e proatividade.",
+      "behavioralScore": "Nota Comportamental (0 – 100)",
+      "behavioralPlaceholder": "Descreva o desempenho comportamental do candidato...",
+      "technical": "Técnica",
+      "technicalDesc": "Conhecimentos técnicos, raciocínio lógico e resolução de problemas.",
+      "technicalScore": "Nota Técnica (0 – 100)",
+      "technicalPlaceholder": "Avalie as habilidades técnicas do candidato...",
+      "general": "Geral",
+      "generalDesc": "Impressão geral, adequação cultural e recomendação final.",
+      "generalScore": "Nota Geral (0 – 100)",
+      "generalPlaceholder": "Deixe sua avaliação geral sobre o candidato...",
+      "fillAll": "Preencha os 3 campos e notas (0–100) para liberar o envio",
+      "sending": "Enviando...",
+      "send": "Enviar Avaliação",
+      "successTitle": "Avaliação Enviada!",
+      "successDesc": "Seu feedback foi salvo com sucesso e estará disponível no relatório da entrevista."
+    },
+    "interface": {
+      "copyLink": "Copiar Link",
+      "copied": "Copiado!",
+      "feedbackRequired": "Avaliação Pendente",
+      "feedbackRequiredDesc": "Para encerrar, envie a avaliação",
+      "endMeeting": "Encerrar Reunião",
+      "candidateAbsent": "Candidato Faltou",
+      "markAbsent": "Marcar Falta",
+      "timeRemaining": "Restam",
+      "minutes": "min",
+      "leaveMeeting": "Sair da Sala",
+      "evaluating": "Avaliando:",
+      "waitingCandidate": "Aguardando..."
+    }
+  },
+  "languages": [
+    "Português",
+    "Inglês",
+    "Espanhol"
+  ]
+}

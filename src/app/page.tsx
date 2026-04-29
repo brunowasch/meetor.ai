@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Target, Sparkles, LogIn, X, LogOut, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "./_components/LanguageSwitcher";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -12,6 +14,7 @@ export default function LandingPage() {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [joinLink, setJoinLink] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const stored = localStorage.getItem("mc_user");
@@ -110,25 +113,29 @@ export default function LandingPage() {
                     {currentUser.tipo && ` - ${currentUser.tipo.charAt(0).toUpperCase() + currentUser.tipo.slice(1).toLowerCase()}`}
                   </span>
                 </div>
+                <LanguageSwitcher />
                 <button
                   onClick={() => setLogoutModalOpen(true)}
                   className="btn btn-ghost btn-sm"
                   style={{ borderRadius: 20, padding: "6px 12px", color: "var(--text-muted)" }}
-                  title="Sair"
+                  title={t('landing.logout')}
                 >
                   <LogOut size={15} />
-                  Sair
+                  {t('landing.logout')}
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => router.push('/login')}
-                className="btn btn-secondary btn-sm"
-                style={{ borderRadius: "20px", padding: "8px 16px" }}
-              >
-                <LogIn size={16} />
-                Fazer Login
-              </button>
+              <>
+                <LanguageSwitcher />
+                <button
+                  onClick={() => router.push('/login')}
+                  className="btn btn-secondary btn-sm"
+                  style={{ borderRadius: "20px", padding: "8px 16px" }}
+                >
+                  <LogIn size={16} />
+                  {t('landing.login')}
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -156,7 +163,7 @@ export default function LandingPage() {
               color: "var(--text)",
             }}
           >
-            Videochamadas em <br/>
+            {t('landing.title1')} <br/>
             <span
               style={{
                 backgroundImage: "linear-gradient(135deg, #1DB5DA, #06b6d4)",
@@ -166,7 +173,7 @@ export default function LandingPage() {
                 color: "transparent",
               }}
             >
-              Tempo Real
+              {t('landing.title2')}
             </span>
           </h1>
 
@@ -179,7 +186,7 @@ export default function LandingPage() {
               lineHeight: 1.7,
             }}
           >
-            Nenhum cadastro, nenhum download necessário. Crie o seu link único, compartilhe com o convidado e conversem livremente com total privacidade!
+            {t('landing.subtitle')}
           </p>
 
           <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -189,10 +196,10 @@ export default function LandingPage() {
               className="btn btn-primary btn-lg"
               style={{ fontSize: 18, padding: "16px 32px", borderRadius: 32, boxShadow: "0 8px 20px rgba(37,99,235,0.3)" }}
             >
-              {loading ? "Gerando Link..." : (
+              {loading ? t('landing.generating') : (
                 <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Sparkles size={20} />
-                  Criar Reunião Agora
+                  {t('landing.createMeeting')}
                 </span>
               )}
             </button>
@@ -203,7 +210,7 @@ export default function LandingPage() {
             >
               <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <LogIn size={20} />
-                Entrar com Link
+                {t('landing.joinWithLink')}
               </span>
             </button>
           </div>
@@ -216,21 +223,21 @@ export default function LandingPage() {
             <button onClick={() => setJoinModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
               <X size={24} />
             </button>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>Entrar em uma Reunião</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{t('landing.joinModal.title')}</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
-              Cole o link compartilhado pelo anfitrião ou o ID da sala para entrar imediatamente.
+              {t('landing.joinModal.desc')}
             </p>
             <form onSubmit={handleJoinMeeting} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <input 
                 type="text" 
-                placeholder="Ex: https://.../meeting/abc12345" 
+                placeholder={t('landing.joinModal.placeholder')} 
                 value={joinLink}
                 onChange={(e) => setJoinLink(e.target.value)}
                 style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 16, outline: "none" }}
                 autoFocus
               />
               <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: 16, borderRadius: 12, fontSize: 16, fontWeight: 600 }}>
-                Entrar na Sala
+                {t('landing.joinModal.button')}
               </button>
             </form>
           </div>
@@ -246,13 +253,13 @@ export default function LandingPage() {
             <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#fee2e2", marginBottom: 16 }}>
               <LogOut size={28} color="#dc2626" />
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>Sair da conta?</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{t('landing.logoutModal.title')}</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
-              Tem certeza que deseja sair agora? Você precisará fazer login novamente para acessar suas próximas chamadas.
+              {t('landing.logoutModal.desc')}
             </p>
             <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
               <button onClick={() => setLogoutModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600 }}>
-                Cancelar
+                {t('landing.logoutModal.cancel')}
               </button>
               <button 
                 onClick={() => {
@@ -261,7 +268,7 @@ export default function LandingPage() {
                 }} 
                 style={{ flex: 1, padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600, background: "#dc2626", color: "white", border: "none", cursor: "pointer" }}
               >
-                Sim, sair
+                {t('landing.logoutModal.confirm')}
               </button>
             </div>
           </div>
@@ -277,9 +284,9 @@ export default function LandingPage() {
             <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#e0f2fe", marginBottom: 16 }}>
               <img src="/icon.png" alt="Connect Skills" style={{ width: 32, height: 32, objectFit: "contain" }} />
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>Conta Necessária</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{t('landing.registerModal.title')}</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
-              Apenas usuários do Connect Skills podem criar novas salas de reunião. Se você não tem uma conta, cadastre-se agora mesmo!
+              {t('landing.registerModal.desc')}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", justifyContent: "center" }}>
               <button 
@@ -288,10 +295,10 @@ export default function LandingPage() {
                 }} 
                 style={{ width: "100%", padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600, background: "var(--primary)", color: "white", border: "none", cursor: "pointer" }}
               >
-                Cadastrar no Connect Skills
+                {t('landing.registerModal.button')}
               </button>
               <button onClick={() => setRegisterModalOpen(false)} className="btn btn-secondary" style={{ width: "100%", padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600 }}>
-                Cancelar
+                {t('landing.registerModal.cancel')}
               </button>
             </div>
           </div>

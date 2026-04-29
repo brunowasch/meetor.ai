@@ -20,6 +20,7 @@ import {
   AlertCircle,
   User,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type AuthStatus = "checking" | "need_login" | "unauthorized" | "authorized" | "error" | "expired";
 
@@ -47,6 +48,7 @@ function LoginModal({
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,11 +131,10 @@ function LoginModal({
             />
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: 0 }}>
-            Login Necessário
+            {t('meeting.loginModal.title')}
           </h2>
           <p style={{ fontSize: 14, color: "#888", marginTop: 8 }}>
-            Apenas participantes autorizados podem entrar nesta sala. Faça login
-            com sua conta do Connect Skills.
+            {t('meeting.loginModal.desc')}
           </p>
         </div>
 
@@ -155,13 +156,13 @@ function LoginModal({
 
         <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 13, color: "#aaa" }}>E-mail</label>
+            <label style={{ fontSize: 13, color: "#aaa" }}>{t('meeting.loginModal.emailLabel')}</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
+              placeholder={t('meeting.loginModal.emailPlaceholder')}
               style={{
                 background: "#161820",
                 border: "1px solid #2a2c36",
@@ -175,14 +176,14 @@ function LoginModal({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 13, color: "#aaa" }}>Senha</label>
+            <label style={{ fontSize: 13, color: "#aaa" }}>{t('meeting.loginModal.passwordLabel')}</label>
             <div style={{ position: "relative" }}>
               <input
                 type={showPass ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('meeting.loginModal.passwordPlaceholder')}
                 style={{
                   width: "100%",
                   background: "#161820",
@@ -238,12 +239,12 @@ function LoginModal({
             }}
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? t('meeting.loginModal.entering') : t('meeting.loginModal.enter')}
           </button>
 
           <div style={{ textAlign: "center", marginTop: 4 }}>
             <a href="/login" style={{ fontSize: 13, color: "#60a5fa", textDecoration: "none" }}>
-              Entrar com Google / LinkedIn / Facebook →
+              {t('meeting.loginModal.socialLogin')}
             </a>
           </div>
         </form>
@@ -257,6 +258,7 @@ function LoginModal({
 ───────────────────────────────────────────── */
 function ExpiredScreen({ isMentor }: { isMentor: boolean }) {
   const baseUrl = process.env.NEXT_PUBLIC_CONNECT_SKILLS_URL || "http://localhost:3000";
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -298,13 +300,13 @@ function ExpiredScreen({ isMentor }: { isMentor: boolean }) {
           </svg>
         </div>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
-          Link Expirado
+          {t('meeting.expired.title')}
         </h1>
         <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7, marginBottom: 36 }}>
-          O tempo desta reunião já passou. Este link não está mais disponível para acesso.
+          {t('meeting.expired.desc')}
           <br />
           <span style={{ fontSize: 13, color: "#4b5563", marginTop: 8, display: "block" }}>
-            Se precisar agendar uma nova sessão, acesse o Connect Skills.
+            {t('meeting.expired.subDesc')}
           </span>
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -325,7 +327,7 @@ function ExpiredScreen({ isMentor }: { isMentor: boolean }) {
               cursor: "pointer",
             }}
           >
-            {isMentor ? "Ver Minhas Mentorias" : "Ver Minhas Mentorias"}
+            {isMentor ? t('meeting.expired.mentorButton') : t('meeting.expired.candidateButton')}
           </button>
           <button
             onClick={() => window.location.href = "/"}
@@ -340,7 +342,7 @@ function ExpiredScreen({ isMentor }: { isMentor: boolean }) {
               cursor: "pointer",
             }}
           >
-            Página Inicial
+            {t('meeting.expired.homeButton')}
           </button>
         </div>
       </div>
@@ -353,6 +355,7 @@ function ExpiredScreen({ isMentor }: { isMentor: boolean }) {
 ───────────────────────────────────────────── */
 function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void }) {
   const router = useRouter();
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -391,7 +394,7 @@ function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void
           <ShieldAlert size={32} color="#ef4444" />
         </div>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
-          Acesso Negado
+          {t('meeting.accessDenied.title')}
         </h1>
         <p style={{ fontSize: 15, color: "#888", lineHeight: 1.6, marginBottom: 32 }}>{reason}</p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
@@ -408,7 +411,7 @@ function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void
               cursor: "pointer",
             }}
           >
-            Tentar novamente
+            {t('meeting.accessDenied.retry')}
           </button>
           <button
             onClick={() => router.push("/")}
@@ -423,7 +426,7 @@ function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void
               cursor: "pointer",
             }}
           >
-            Voltar ao Início
+            {t('meeting.accessDenied.homeButton')}
           </button>
         </div>
       </div>
@@ -431,9 +434,6 @@ function AccessDenied({ reason, onRetry }: { reason: string; onRetry: () => void
   );
 }
 
-/* ─────────────────────────────────────────────
-   LOADING SCREEN
-───────────────────────────────────────────── */
 function LoadingScreen({ message }: { message: string }) {
   return (
     <div
@@ -482,6 +482,7 @@ function FeedbackSidebar({
   const [notaGeral, setNotaGeral] = useState<string>("");
   const [status, setStatus] = useState<FeedbackStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const { t } = useTranslation();
 
   const parseNota = (v: string) => { const n = parseInt(v, 10); return isNaN(n) ? null : n; };
   const notaValida = (v: string) => { const n = parseNota(v); return n !== null && n >= 0 && n <= 100; };
@@ -513,7 +514,6 @@ function FeedbackSidebar({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao enviar avaliação.");
       setStatus("success");
-      // Notifica o componente pai que o feedback foi enviado com sucesso
       onFeedbackSent();
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Erro ao enviar avaliação.");
@@ -557,9 +557,9 @@ function FeedbackSidebar({
           </div>
           <div>
             <div className="text-sm font-bold text-slate-100">
-              Avaliação do Candidato
+              {t('meeting.sidebar.title')}
             </div>
-            <div className="text-[11px] text-slate-500">Visível apenas para você</div>
+            <div className="text-[11px] text-slate-500">{t('meeting.sidebar.subtitle')}</div>
           </div>
         </div>
       </div>
@@ -575,10 +575,10 @@ function FeedbackSidebar({
               </div>
               <div>
                 <div className="text-base font-bold text-slate-100 mb-1.5">
-                  Avaliação Enviada!
+                  {t('meeting.sidebar.successTitle')}
                 </div>
                 <div className="text-[13px] text-slate-500 leading-relaxed">
-                  Seu feedback foi salvo com sucesso e estará disponível no relatório da entrevista.
+                  {t('meeting.sidebar.successDesc')}
                 </div>
               </div>
             </div>
@@ -588,18 +588,18 @@ function FeedbackSidebar({
               {/* Comportamental — cabeçalho */}
               <div>
                 <label className="text-xs font-bold tracking-[0.6px] uppercase text-slate-400 mb-1.5 block">
-                  Comportamental
+                  {t('meeting.sidebar.behavioral')}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
                 <p className="text-xs text-slate-500 mb-2 leading-snug">
-                  Comunicação, trabalho em equipe, postura profissional e proatividade.
+                  {t('meeting.sidebar.behavioralDesc')}
                 </p>
               </div>
 
               {/* Comportamental — nota */}
               <div className="mt-2.5">
                 <label className="text-[11px] text-slate-500 mb-1 block">
-                  Nota Comportamental (0 – 100)
+                  {t('meeting.sidebar.behavioralScore')}
                 </label>
                 <input
                   type="number"
@@ -617,7 +617,7 @@ function FeedbackSidebar({
               {/* Comportamental — textarea */}
               <div>
                 <textarea
-                  placeholder="Descreva o desempenho comportamental do candidato..."
+                  placeholder={t('meeting.sidebar.behavioralPlaceholder')}
                   value={comportamental}
                   onChange={(e) => setComportamental(e.target.value)}
                   disabled={status === "sending"}
@@ -629,18 +629,18 @@ function FeedbackSidebar({
               {/* Técnica — cabeçalho */}
               <div>
                 <label className="text-xs font-bold tracking-[0.6px] uppercase text-slate-400 mb-1.5 block">
-                  Técnica
+                  {t('meeting.sidebar.technical')}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
                 <p className="text-xs text-slate-500 mb-2 leading-snug">
-                  Conhecimentos técnicos, raciocínio lógico e resolução de problemas.
+                  {t('meeting.sidebar.technicalDesc')}
                 </p>
               </div>
 
               {/* Técnica — nota */}
               <div className="mt-2">
                 <label className="text-[11px] text-slate-500 mb-1 block">
-                  Nota Técnica (0 – 100)
+                  {t('meeting.sidebar.technicalScore')}
                 </label>
                 <input
                   type="number"
@@ -658,7 +658,7 @@ function FeedbackSidebar({
               {/* Técnica — textarea */}
               <div>
                 <textarea
-                  placeholder="Avalie as habilidades técnicas do candidato..."
+                  placeholder={t('meeting.sidebar.technicalPlaceholder')}
                   value={tecnica}
                   onChange={(e) => setTecnica(e.target.value)}
                   disabled={status === "sending"}
@@ -670,18 +670,18 @@ function FeedbackSidebar({
               {/* Geral — cabeçalho */}
               <div>
                 <label className="text-xs font-bold tracking-[0.6px] uppercase text-slate-400 mb-1.5 block">
-                  Geral
+                  {t('meeting.sidebar.general')}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
                 <p className="text-xs text-slate-500 mb-2 leading-snug">
-                  Impressão geral, adequação cultural e recomendação final.
+                  {t('meeting.sidebar.generalDesc')}
                 </p>
               </div>
 
               {/* Geral — nota */}
               <div className="mt-2.5">
                 <label className="text-[11px] text-slate-500 mb-0.5 block">
-                  Nota Geral (0 – 100)
+                  {t('meeting.sidebar.generalScore')}
                 </label>
                 <input
                   type="number"
@@ -699,7 +699,7 @@ function FeedbackSidebar({
               {/* Geral — textarea */}
               <div>
                 <textarea
-                  placeholder="Deixe sua avaliação geral sobre o candidato..."
+                  placeholder={t('meeting.sidebar.generalPlaceholder')}
                   value={geral}
                   onChange={(e) => setGeral(e.target.value)}
                   disabled={status === "sending"}
@@ -725,7 +725,7 @@ function FeedbackSidebar({
         <div className="px-5 pt-4 pb-5 border-t border-[#1a1c24] mt-3">
           {!allFilled && (
             <p className="text-xs text-slate-500 mb-2.5 text-center">
-              Preencha os 3 campos e notas (0–100) para liberar o envio
+              {t('meeting.sidebar.fillAll')}
             </p>
           )}
           <button
@@ -743,12 +743,12 @@ function FeedbackSidebar({
             {status === "sending" ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Enviando...
+                {t('meeting.sidebar.sending')}
               </>
             ) : (
               <>
                 <Send size={15} />
-                Enviar Avaliação
+                {t('meeting.sidebar.send')}
               </>
             )}
           </button>
@@ -762,6 +762,7 @@ function MeetingRoomInner() {
   const { token } = useParams<{ token: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t, i18n } = useTranslation();
 
   const isHost = searchParams.get("host") === "true";
   const [copied, setCopied] = useState(false);
@@ -1014,6 +1015,8 @@ function MeetingRoomInner() {
     ? "Anfitrião"
     : "Participante";
 
+  const jitsiLang = i18n.language?.startsWith("en") ? "en" : i18n.language?.startsWith("es") ? "es" : "ptBR";
+
   return (
     <div
       style={{
@@ -1144,9 +1147,9 @@ function MeetingRoomInner() {
               }}
             >
               {copied ? (
-                <><CheckCircle size={16} /> Link Copiado!</>
+                <><CheckCircle size={16} /> {t('meeting.interface.copied')}</>
               ) : (
-                <><Copy size={16} /> Compartilhar</>
+                <><Copy size={16} /> {t('meeting.interface.copyLink')}</>
               )}
             </button>
           )}
@@ -1167,7 +1170,7 @@ function MeetingRoomInner() {
               transition: "all 0.2s",
             }}
           >
-            <LogOut size={16} /> Encerrar
+            <LogOut size={16} /> {t('meeting.interface.endMeeting')}
           </button>
         </div>
       </header>
@@ -1356,7 +1359,7 @@ function MeetingRoomInner() {
                   onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
                   onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
                 >
-                  Entrar na Reunião
+                  {t('meeting.loginModal.enter')}
                 </button>
               </div>
             </div>
@@ -1374,7 +1377,7 @@ function MeetingRoomInner() {
               disableProfile: true,
               disableModeratorIndicator: false,
               enableEmailInStats: false,
-              defaultLanguage: "ptBR",
+              defaultLanguage: jitsiLang,
             }}
             interfaceConfigOverwrite={{
               DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,

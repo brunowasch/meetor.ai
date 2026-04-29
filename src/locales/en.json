@@ -1,0 +1,118 @@
+{
+  "landing": {
+    "title1": "Real-time Video",
+    "title2": "Calls",
+    "subtitle": "No sign-up, no downloads required. Create your unique link, share it with your guest, and converse freely with complete privacy!",
+    "createMeeting": "Create Meeting Now",
+    "generating": "Generating Link...",
+    "joinWithLink": "Join with Link",
+    "login": "Login",
+    "logout": "Logout",
+    "joinModal": {
+      "title": "Join a Meeting",
+      "desc": "Paste the link shared by the host or the room ID to enter immediately.",
+      "placeholder": "Ex: https://.../meeting/abc12345",
+      "button": "Join Room"
+    },
+    "logoutModal": {
+      "title": "Log out of your account?",
+      "desc": "Are you sure you want to log out now? You will need to log in again to access your upcoming calls.",
+      "cancel": "Cancel",
+      "confirm": "Yes, log out"
+    },
+    "registerModal": {
+      "title": "Account Required",
+      "desc": "Only Connect Skills users can create new meeting rooms. If you don't have an account, sign up right now!",
+      "button": "Sign up on Connect Skills",
+      "cancel": "Cancel"
+    }
+  },
+  "login": {
+    "title": "Login",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "keepLogin": "Keep me logged in",
+    "forgotPassword": "Forgot your password?",
+    "entering": "Logging in...",
+    "enter": "Login",
+    "or": "or",
+    "google": "Continue with Google",
+    "linkedin": "Continue with LinkedIn",
+    "facebook": "Continue with Facebook",
+    "noAccount": "Don't have an account?",
+    "register": "Sign up",
+    "backHome": "Back to Home",
+    "errors": {
+      "accountNotFound": "Your account was not found on Connect Skills. Sign up on Connect Skills first.",
+      "userNotFound": "User not found. If you registered via social, try logging in through the network."
+    }
+  },
+  "meeting": {
+    "loginModal": {
+      "title": "Login Required",
+      "desc": "Only authorized participants can enter this room. Please log in with your Connect Skills account.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "your@email.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "entering": "Logging in...",
+      "enter": "Login",
+      "socialLogin": "Login with Google / LinkedIn / Facebook →"
+    },
+    "expired": {
+      "title": "Link Expired",
+      "desc": "The time for this meeting has passed. This link is no longer available.",
+      "subDesc": "If you need to schedule a new session, go to Connect Skills.",
+      "mentorButton": "View My Mentorships",
+      "candidateButton": "View My Mentorships",
+      "homeButton": "Home Page"
+    },
+    "accessDenied": {
+      "title": "Access Denied",
+      "retry": "Try again",
+      "homeButton": "Back to Home"
+    },
+    "sidebar": {
+      "title": "Candidate Evaluation",
+      "subtitle": "Visible only to you",
+      "behavioral": "Behavioral",
+      "behavioralDesc": "Communication, teamwork, professional posture, and proactivity.",
+      "behavioralScore": "Behavioral Score (0 – 100)",
+      "behavioralPlaceholder": "Describe the candidate's behavioral performance...",
+      "technical": "Technical",
+      "technicalDesc": "Technical knowledge, logical reasoning, and problem solving.",
+      "technicalScore": "Technical Score (0 – 100)",
+      "technicalPlaceholder": "Evaluate the candidate's technical skills...",
+      "general": "General",
+      "generalDesc": "General impression, cultural fit, and final recommendation.",
+      "generalScore": "General Score (0 – 100)",
+      "generalPlaceholder": "Leave your general evaluation of the candidate...",
+      "fillAll": "Fill all 3 fields and scores (0–100) to enable submission",
+      "sending": "Sending...",
+      "send": "Submit Evaluation",
+      "successTitle": "Evaluation Submitted!",
+      "successDesc": "Your feedback was successfully saved and will be available in the interview report."
+    },
+    "interface": {
+      "copyLink": "Copy Link",
+      "copied": "Copied!",
+      "feedbackRequired": "Evaluation Pending",
+      "feedbackRequiredDesc": "To end, submit the evaluation",
+      "endMeeting": "End Meeting",
+      "candidateAbsent": "Candidate Absent",
+      "markAbsent": "Mark Absent",
+      "timeRemaining": "Remaining",
+      "minutes": "min",
+      "leaveMeeting": "Leave Room",
+      "evaluating": "Evaluating:",
+      "waitingCandidate": "Waiting..."
+    }
+  },
+  "languages": [
+    "Portuguese",
+    "English",
+    "Spanish"
+  ]
+}
