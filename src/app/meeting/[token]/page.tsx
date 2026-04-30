@@ -8,6 +8,8 @@ import {
   Target,
   LogOut,
   CheckCircle,
+  CheckCircle2,
+  XCircle,
   Loader2,
   ShieldAlert,
   ShieldCheck,
@@ -18,7 +20,10 @@ import {
   ClipboardList,
   Send,
   AlertCircle,
+  AlertTriangle,
+  Sparkles,
   User,
+  Star,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -466,6 +471,14 @@ function LoadingScreen({ message }: { message: string }) {
 
 /* FEEDBACK SIDEBAR (mentor only)*/
 type FeedbackStatus = "idle" | "sending" | "success" | "error";
+type SubmitStep = "idle" | "analyzing" | "blocked" | "ready" | "submitting";
+
+interface FeedbackAnalysis {
+  quality: number;
+  acceptable: boolean;
+  corrected: string | null;
+  cause: string | null;
+}
 
 function FeedbackSidebar({
   entrevistaId,
@@ -482,6 +495,9 @@ function FeedbackSidebar({
   const [notaGeral, setNotaGeral] = useState<string>("");
   const [status, setStatus] = useState<FeedbackStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [step, setStep] = useState<SubmitStep>("idle");
+  const [analysis, setAnalysis] = useState<FeedbackAnalysis | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const { t } = useTranslation();
 
   const parseNota = (v: string) => { const n = parseInt(v, 10); return isNaN(n) ? null : n; };
@@ -493,9 +509,42 @@ function FeedbackSidebar({
     geral.trim() !== "" && notaValida(notaGeral);
   const isSuccess = status === "success";
 
-  const handleSubmit = async () => {
+  const resetStep = () => {
+    if (step !== "idle" && step !== "analyzing") {
+      setStep("idle");
+      setAnalysis(null);
+      setAnalysisError(null);
+    }
+  };
+
+  const handleAnalyze = async () => {
     if (!allFilled || !entrevistaId) return;
-    setStatus("sending");
+    setStep("analyzing");
+    setAnalysis(null);
+    setAnalysisError(null);
+    try {
+      const combined =
+        `[Comportamental]\n${comportamental.trim()}\n\n` +
+        `[Técnico]\n${tecnica.trim()}\n\n` +
+        `[Geral]\n${geral.trim()}`;
+      const res = await fetch("/api/ai/check-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile: "mentor", feedback: combined, language: "pt" }),
+      });
+      if (!res.ok) throw new Error(`AI error: ${res.status}`);
+      const data: FeedbackAnalysis = await res.json();
+      setAnalysis(data);
+      setStep(data.acceptable ? "ready" : "blocked");
+    } catch {
+      setAnalysisError("Não foi possível analisar o feedback. Tente novamente.");
+      setStep("idle");
+    }
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!allFilled || !entrevistaId || step !== "ready") return;
+    setStep("submitting");
     setErrorMsg("");
     try {
       const res = await fetch("/api/meetings/feedback", {
@@ -517,7 +566,7 @@ function FeedbackSidebar({
       onFeedbackSent();
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Erro ao enviar avaliação.");
-      setStatus("error");
+      setStep("ready");
     }
   };
 
@@ -619,8 +668,8 @@ function FeedbackSidebar({
                 <textarea
                   placeholder={t('meeting.sidebar.behavioralPlaceholder')}
                   value={comportamental}
-                  onChange={(e) => setComportamental(e.target.value)}
-                  disabled={status === "sending"}
+                  onChange={(e) => { setComportamental(e.target.value); resetStep(); }}
+                  disabled={step === "analyzing" || step === "submitting"}
                   className={getTextareaClass(comportamental)}
                   style={textareaStyle}
                 />
@@ -660,8 +709,8 @@ function FeedbackSidebar({
                 <textarea
                   placeholder={t('meeting.sidebar.technicalPlaceholder')}
                   value={tecnica}
-                  onChange={(e) => setTecnica(e.target.value)}
-                  disabled={status === "sending"}
+                  onChange={(e) => { setTecnica(e.target.value); resetStep(); }}
+                  disabled={step === "analyzing" || step === "submitting"}
                   className={getTextareaClass(tecnica)}
                   style={textareaStyle}
                 />
@@ -701,15 +750,69 @@ function FeedbackSidebar({
                 <textarea
                   placeholder={t('meeting.sidebar.generalPlaceholder')}
                   value={geral}
-                  onChange={(e) => setGeral(e.target.value)}
-                  disabled={status === "sending"}
+                  onChange={(e) => { setGeral(e.target.value); resetStep(); }}
+                  disabled={step === "analyzing" || step === "submitting"}
                   className={getTextareaClass(geral)}
                   style={textareaStyle}
                 />
               </div>
 
-              {/* Error */}
-              {status === "error" && errorMsg && (
+              {/* AI analyzing */}
+              {step === "analyzing" && (
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[10px] bg-blue-500/[0.08] border border-blue-500/25 text-blue-400 text-[13px]">
+                  <div className="w-3.5 h-3.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin shrink-0" />
+                  Analisando feedback com IA...
+                </div>
+              )}
+
+              {/* AI analysis error */}
+              {analysisError && (
+                <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-[10px] bg-amber-500/[0.08] border border-amber-500/25 text-amber-400 text-[13px]">
+                  <AlertTriangle size={15} className="mt-px shrink-0" />
+                  {analysisError}
+                </div>
+              )}
+
+              {/* AI blocked */}
+              {step === "blocked" && analysis && (
+                <div className="rounded-[10px] border border-red-500/25 bg-red-500/[0.08] p-3 space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <XCircle size={15} className="text-red-400 shrink-0 mt-px" />
+                    <p className="text-[13px] font-semibold text-red-400">Feedback não aprovado pela IA</p>
+                  </div>
+                  {analysis.cause && (
+                    <p className="text-[12px] text-red-400/80 pl-5">
+                      {(() => {
+                        switch (analysis.cause.toLowerCase()) {
+                          case 'short': return 'Motivo: Texto muito curto.';
+                          case 'agressive':
+                          case 'aggressive': return 'Motivo: Texto agressivo ou ofensivo.';
+                          case 'nosense':
+                          case 'nonsense': return 'Motivo: Texto sem sentido para um feedback.';
+                          case 'language': return 'Motivo: Linguagem inaceitável.';
+                          default: return `Motivo: ${analysis.cause}`;
+                        }
+                      })()}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* AI ready */}
+              {step === "ready" && analysis && (
+                <div className="rounded-[10px] border border-green-500/25 bg-green-500/[0.08] p-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 size={15} className="text-green-400 shrink-0 mt-px" />
+                    <div>
+                      <p className="text-[13px] font-semibold text-green-400">Feedback aprovado pela IA</p>
+                      <p className="text-[12px] text-green-400/70 mt-0.5">Clique em "Confirmar e Enviar" para finalizar.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit error */}
+              {errorMsg && (
                 <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-[10px] bg-red-500/[0.08] border border-red-500/25 text-red-400 text-[13px]">
                   <AlertCircle size={15} className="mt-px shrink-0" />
                   {errorMsg}
@@ -720,40 +823,170 @@ function FeedbackSidebar({
         </div>
       </div>
 
-      {/* Submit button */}
+      {/* Submit button area */}
       {!isSuccess && (
-        <div className="px-5 pt-4 pb-5 border-t border-[#1a1c24] mt-3">
+        <div className="px-5 pt-4 pb-5 border-t border-[#1a1c24] mt-3 flex flex-col gap-2">
           {!allFilled && (
-            <p className="text-xs text-slate-500 mb-2.5 text-center">
+            <p className="text-xs text-slate-500 text-center">
               {t('meeting.sidebar.fillAll')}
             </p>
           )}
-          <button
-            onClick={handleSubmit}
-            disabled={!allFilled || status === "sending" || !entrevistaId}
-            className={[
-              "w-full py-[13px] rounded-xl text-sm font-bold",
-              "flex items-center justify-center gap-2",
-              "border-none transition-all duration-200",
-              allFilled && status !== "sending"
-                ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-[0_4px_20px_rgba(37,99,235,.3)] cursor-pointer"
-                : "bg-[#1a1c24] text-[#374151] cursor-not-allowed",
-            ].join(" ")}
-          >
-            {status === "sending" ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                {t('meeting.sidebar.sending')}
-              </>
-            ) : (
-              <>
-                <Send size={15} />
-                {t('meeting.sidebar.send')}
-              </>
-            )}
-          </button>
+
+          {/* Step: idle or blocked — show "Verificar com IA" */}
+          {(step === "idle" || step === "blocked" || step === "analyzing") && (
+            <button
+              onClick={handleAnalyze}
+              disabled={!allFilled || step === "analyzing" || !entrevistaId}
+              className={[
+                "w-full py-[13px] rounded-xl text-sm font-bold",
+                "flex items-center justify-center gap-2",
+                "border-none transition-all duration-200",
+                allFilled && step !== "analyzing"
+                  ? "bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-[0_4px_20px_rgba(124,58,237,.25)] cursor-pointer"
+                  : "bg-[#1a1c24] text-[#374151] cursor-not-allowed",
+              ].join(" ")}
+            >
+              {step === "analyzing" ? (
+                <><Loader2 size={16} className="animate-spin" /> Verificando...</>
+              ) : (
+                <><Sparkles size={15} /> Verificar com IA</>
+              )}
+            </button>
+          )}
+
+          {/* Step: ready — show "Confirmar e Enviar" */}
+          {step === "ready" && (
+            <button
+              onClick={handleConfirmSubmit}
+              disabled={!entrevistaId}
+              className="w-full py-[13px] rounded-xl text-sm font-bold flex items-center justify-center gap-2 border-none bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-[0_4px_20px_rgba(22,163,74,.25)] cursor-pointer transition-all duration-200"
+            >
+              <Send size={15} />
+              Confirmar e Enviar
+            </button>
+          )}
+
+          {/* Step: submitting */}
+          {step === "submitting" && (
+            <button
+              disabled
+              className="w-full py-[13px] rounded-xl text-sm font-bold flex items-center justify-center gap-2 border-none bg-[#1a1c24] text-[#374151] cursor-not-allowed"
+            >
+              <Loader2 size={16} className="animate-spin" />
+              {t('meeting.sidebar.sending')}
+            </button>
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+function CandidateRatingModal({ entrevistaId, onSubmit }: { entrevistaId: string | null; onSubmit: () => void }) {
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { t } = useTranslation();
+
+  const handleSubmit = async () => {
+    if (rating === 0 || !entrevistaId) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/meetings/rate-mentor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entrevistaId, nota: rating }),
+      });
+      if (!res.ok) throw new Error("Erro ao salvar avaliação.");
+    } catch (err: unknown) {
+      console.error(err);
+      setError("Erro de conexão.");
+    } finally {
+      onSubmit();
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 3000,
+        background: "rgba(0,0,0,0.85)",
+        backdropFilter: "blur(8px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 400,
+          background: "#0e0f12",
+          borderRadius: 20,
+          border: "1px solid #1e2029",
+          padding: "40px",
+          boxShadow: "0 32px 64px rgba(0,0,0,0.6)",
+          textAlign: "center",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>
+          Avalie seu Mentor
+        </h2>
+        <p style={{ fontSize: 14, color: "#888", marginBottom: 24 }}>
+          A mentoria foi encerrada. Como foi a sua experiência com o mentor?
+        </p>
+        
+        {error && (
+          <div style={{ color: "#ef4444", fontSize: 13, marginBottom: 16 }}>{error}</div>
+        )}
+
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 32 }}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <div
+              key={star}
+              onMouseEnter={() => setHoveredRating(star)}
+              onMouseLeave={() => setHoveredRating(0)}
+              onClick={() => setRating(star)}
+              style={{ cursor: "pointer", transition: "transform 0.1s" }}
+            >
+              <Star
+                size={36}
+                fill={star <= (hoveredRating || rating) ? "#fbbf24" : "transparent"}
+                color={star <= (hoveredRating || rating) ? "#fbbf24" : "#4b5563"}
+              />
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={rating === 0 || loading}
+          style={{
+            width: "100%",
+            padding: "14px 0",
+            borderRadius: 10,
+            background: rating > 0 && !loading ? "linear-gradient(135deg, #2563eb, #06b6d4)" : "#1e2029",
+            border: "none",
+            color: rating > 0 && !loading ? "#fff" : "#666",
+            fontSize: 15,
+            fontWeight: 600,
+            cursor: rating > 0 && !loading ? "pointer" : "not-allowed",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          {loading && <Loader2 size={16} className="animate-spin" />}
+          {loading ? "Enviando..." : "Enviar Avaliação"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -779,8 +1012,8 @@ function MeetingRoomInner() {
   const [meetingSchedule, setMeetingSchedule] = useState<{data: string, horaInicio: string, horaFim: string} | null>(null);
   const [timeWarning, setTimeWarning] = useState<string | null>(null);
   const [isMeetingOver, setIsMeetingOver] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
-  // Controla se o mentor já enviou o feedback — usado para marcar a reunião como CONCLUIDA ao sair
   const [feedbackSent, setFeedbackSent] = useState(false);
   const feedbackSentRef = useRef(false);
 
@@ -789,12 +1022,10 @@ function MeetingRoomInner() {
     setFeedbackSent(true);
   };
 
-  // Encerra a reunião no backend (marca como CONCLUIDA) quando o feedback já foi enviado
   const markMeetingEnded = (id: string) => {
     navigator.sendBeacon("/api/meetings/end", JSON.stringify({ entrevistaId: id }));
   };
 
-  // Controle de comparecimento
   const [candidateJoinedForMentor, setCandidateJoinedForMentor] = useState(false);
   const [showMarkAbsentButton, setShowMarkAbsentButton] = useState(false);
   const [absentMarked, setAbsentMarked] = useState(false);
@@ -868,11 +1099,16 @@ function MeetingRoomInner() {
   };
 
   const leaveRoom = () => {
-    if (feedbackSentRef.current && entrevistaId) {
-      markMeetingEnded(entrevistaId);
-    }
     if (jitsiApiRef.current) jitsiApiRef.current.dispose();
-    router.push("/");
+    if (!isMentor) {
+      if (entrevistaId) navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ entrevistaId, action: "leave" }));
+      setShowRatingModal(true);
+    } else {
+      if (feedbackSentRef.current && entrevistaId) {
+        markMeetingEnded(entrevistaId);
+      }
+      router.push("/");
+    }
   };
 
   useEffect(() => {
@@ -889,12 +1125,16 @@ function MeetingRoomInner() {
       const nowMs = Date.now();
       const diffMinutes = (endMs - nowMs) / 1000 / 60;
       
-      if (diffMinutes <= -5) {
+      if (diffMinutes <= 0) {
          if (jitsiApiRef.current) jitsiApiRef.current.dispose();
          setIsMeetingOver(true);
          
-         if (isMentor && !candidateJoinedRef.current && !absentMarkedRef.current) {
-             handleCandidateAttendance("mark_absent_auto");
+         if (isMentor) {
+             if (!candidateJoinedRef.current && !absentMarkedRef.current) {
+                 handleCandidateAttendance("mark_absent_auto");
+             }
+         } else {
+             setShowRatingModal(true);
          }
          return true;
       }
@@ -1241,7 +1481,7 @@ function MeetingRoomInner() {
                   </div>
                   <h2 style={{ color: "#fff", fontSize: "24px", marginBottom: "16px", fontWeight: 700 }}>A Reunião foi Encerrada</h2>
                   <p style={{ color: "#a1a1aa", fontSize: "15px", marginBottom: "24px", lineHeight: 1.6 }}>
-                    O tempo limite destinado a esta reunião foi excedido em 5 minutos e a sala foi desligada automaticamente.
+                    O tempo limite de 45 minutos destinado a esta mentoria foi alcançado e a sala foi desligada automaticamente.
                   </p>
                   <p style={{ color: "#fff", fontSize: "16px", marginBottom: "24px", fontWeight: 500 }}>
                     Como você deseja continuar:
@@ -1444,8 +1684,14 @@ function MeetingRoomInner() {
               });
 
               externalApi.addListener("videoConferenceLeft", () => {
-                if (!isMentor && entrevistaId) {
-                   navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ entrevistaId, action: "leave" }));
+                if (!isMentor) {
+                   if (entrevistaId) navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ entrevistaId, action: "leave" }));
+                   if (jitsiApiRef.current) {
+                      jitsiApiRef.current.dispose();
+                      jitsiApiRef.current = null;
+                   }
+                   setShowRatingModal(true);
+                   return;
                 }
                 // Se o mentor saiu com feedback já enviado, marca como CONCLUIDA
                 if (isMentor && feedbackSentRef.current && entrevistaId) {
@@ -1464,6 +1710,13 @@ function MeetingRoomInner() {
           )}
         </div>
       </div>
+      
+      {showRatingModal && (
+        <CandidateRatingModal 
+          entrevistaId={entrevistaId} 
+          onSubmit={() => router.push("/")} 
+        />
+      )}
     </div>
   );
 }

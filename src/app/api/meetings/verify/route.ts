@@ -39,7 +39,6 @@ export async function GET(req: NextRequest) {
         const syncSecret = process.env.SYNC_SECRET;
 
         if (!connectSkillsUrl || !syncSecret) {
-            console.error("CONNECT_SKILLS_URL ou SYNC_SECRET não configurado.");
             return NextResponse.json({ authorized: false, reason: "Configuração de segurança incompleta." }, { status: 500 });
         }
 
@@ -93,8 +92,7 @@ export async function GET(req: NextRequest) {
                 const [year, month, day] = meetingData.split("-").map(Number);
                 const [h, m] = horaFim.split(":").map(Number);
                 const endTime = new Date(year, month - 1, day, h, m, 0);
-                const gracePeriodMs = 5 * 60 * 1000;
-                isExpired = Date.now() > endTime.getTime() + gracePeriodMs;
+                isExpired = Date.now() >= endTime.getTime();
             } catch {
             }
         }
@@ -127,7 +125,6 @@ export async function GET(req: NextRequest) {
             },
         });
     } catch (error) {
-        console.error("Erro:", error);
         return NextResponse.json({ authorized: false, reason: "Erro interno do servidor." }, { status: 500 });
     }
 }
