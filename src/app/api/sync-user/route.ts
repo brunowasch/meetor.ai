@@ -12,18 +12,18 @@ export async function POST(req: NextRequest) {
 
   // 2. Ler body enviado pelo Connect Skills
   const body = await req.json();
-  const { 
-    usuario_id, 
-    tipo, 
-    email, 
+  const {
+    usuario_id,
+    tipo,
+    email,
     senha,
-    nome, 
-    sobrenome, 
-    foto_perfil, 
-    cidade, 
-    estado, 
-    pais, 
-    bio_descricao 
+    nome,
+    sobrenome,
+    foto_perfil,
+    cidade,
+    estado,
+    pais,
+    bio_descricao
   } = body as any;
 
   if (!usuario_id || !tipo || !email) {
@@ -42,25 +42,23 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const existingUser = await prisma.mentorconnect_usuario.findFirst({
-      where: { email }
+    // Prefer lookup by usuario_id (most reliable), fall back to email
+    let existingUser = await prisma.mentorconnect_usuario.findUnique({
+      where: { usuario_id }
     });
 
-    if (existingUser) {
-      if (existingUser.usuario_id !== usuario_id) {
-         await prisma.mentorconnect_usuario.deleteMany({
-            where: { 
-                usuario_id: usuario_id,
-                id: { not: existingUser.id }
-            }
-         });
-      }
+    if (!existingUser) {
+      existingUser = await prisma.mentorconnect_usuario.findFirst({
+        where: { email }
+      }) ?? null;
+    }
 
+    if (existingUser) {
       await prisma.mentorconnect_usuario.update({
         where: { id: existingUser.id },
         data: {
-          usuario_id,
-          senha: senha || existingUser.senha, 
+          email,
+          senha: senha || existingUser.senha,
           nome: nome || existingUser.nome,
           sobrenome: sobrenome || existingUser.sobrenome,
           tipo,
