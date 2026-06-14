@@ -303,7 +303,7 @@ model mentorconnect_reuniao {
   link         String                        @db.VarChar(512)
   criado_em    DateTime                      @default(now())
   atualizado_em DateTime                     @updatedAt
-  usuario      mentorconnect_usuario         @relation(fields: [criado_por], references: [usuario_id], onDelete: Cascade, onUpdate: NoAction)
+  usuario      mentorconnect_usuario         @relation(fields: [criado_por], references: [usuario_id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([criado_por], map: "reuniao_criado_por_idx")
 }

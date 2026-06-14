@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       await prisma.mentorconnect_usuario.update({
         where: { id: existingUser.id },
         data: {
+          usuario_id,
           email,
           senha: senha || existingUser.senha,
           nome: nome || existingUser.nome,
