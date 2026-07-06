@@ -1,14 +1,14 @@
 # Dependências
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copiar package files e instalar dependências
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 # Build do projeto
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Receber argumentos de build
@@ -52,7 +52,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Imagem de produção
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
