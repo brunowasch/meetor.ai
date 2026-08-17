@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Origens sempre permitidas em desenvolvimento.
-const DEFAULT_ORIGINS = ["http://localhost:3000", "http://localhost:3001"];
+const DEV_ORIGINS = ["http://localhost:3000", "http://localhost:3001"];
 
 /** Reduz um valor (URL completa ou origem) a uma origem canônica (scheme+host+port). */
 function toOrigin(value: string | undefined | null): string | null {
@@ -20,7 +20,9 @@ function toOrigin(value: string | undefined | null): string | null {
  * - origens extras configuráveis via CORS_ALLOWED_ORIGINS (lista separada por vírgula, ex.: domínios de produção)
  */
 function getAllowedOrigins(): Set<string> {
-    const set = new Set<string>(DEFAULT_ORIGINS);
+    const set = new Set<string>(
+        process.env.NODE_ENV === "production" ? [] : DEV_ORIGINS
+    );
 
     for (const value of [process.env.CONNECT_SKILLS_URL, process.env.NEXT_PUBLIC_CONNECT_SKILLS_URL]) {
         const origin = toOrigin(value);

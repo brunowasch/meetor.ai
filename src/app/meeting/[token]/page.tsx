@@ -482,9 +482,13 @@ interface FeedbackAnalysis {
 
 function FeedbackSidebar({
   entrevistaId,
+  meetingToken,
+  userEmail,
   onFeedbackSent,
 }: {
   entrevistaId: string | null;
+  meetingToken: string;
+  userEmail: string | null;
   onFeedbackSent: () => void;
 }) {
   const [comportamental, setComportamental] = useState("");
@@ -530,7 +534,7 @@ function FeedbackSidebar({
       const res = await fetch("/api/ai/check-feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile: "mentor", feedback: combined, language: "pt" }),
+        body: JSON.stringify({ profile: "mentor", feedback: combined, language: "pt", token: meetingToken, email: userEmail }),
       });
       if (!res.ok) throw new Error(`AI error: ${res.status}`);
       const data: FeedbackAnalysis = await res.json();
@@ -551,7 +555,8 @@ function FeedbackSidebar({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          entrevistaId,
+          token: meetingToken,
+          email: userEmail,
           feedback_comportamental: comportamental.trim(),
           nota_comportamental: parseNota(notaComportamental),
           feedback_tecnico: tecnica.trim(),
@@ -882,7 +887,7 @@ function FeedbackSidebar({
   );
 }
 
-function CandidateRatingModal({ entrevistaId, onSubmit }: { entrevistaId: string | null; onSubmit: () => void }) {
+function CandidateRatingModal({ entrevistaId, meetingToken, userEmail, onSubmit }: { entrevistaId: string | null; meetingToken: string; userEmail: string | null; onSubmit: () => void }) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -897,7 +902,7 @@ function CandidateRatingModal({ entrevistaId, onSubmit }: { entrevistaId: string
       const res = await fetch("/api/meetings/rate-mentor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entrevistaId, nota: rating }),
+        body: JSON.stringify({ token: meetingToken, email: userEmail, nota: rating }),
       });
       if (!res.ok) throw new Error("Erro ao salvar avaliação.");
     } catch (err: unknown) {
@@ -1022,8 +1027,11 @@ function MeetingRoomInner() {
     setFeedbackSent(true);
   };
 
-  const markMeetingEnded = (id: string) => {
-    navigator.sendBeacon("/api/meetings/end", JSON.stringify({ entrevistaId: id }));
+  const markMeetingEnded = (_id: string) => {
+    navigator.sendBeacon(
+      "/api/meetings/end",
+      JSON.stringify({ token, email: authorizedUser?.email ?? null })
+    );
   };
 
   const [candidateJoinedForMentor, setCandidateJoinedForMentor] = useState(false);
@@ -1039,7 +1047,7 @@ function MeetingRoomInner() {
       await fetch("/api/meetings/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entrevistaId, action }),
+        body: JSON.stringify({ token, email: authorizedUser?.email ?? null, action }),
         keepalive: true
       });
     } catch (e) {
@@ -1101,7 +1109,7 @@ function MeetingRoomInner() {
   const leaveRoom = () => {
     if (jitsiApiRef.current) jitsiApiRef.current.dispose();
     if (!isMentor) {
-      if (entrevistaId) navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ entrevistaId, action: "leave" }));
+      if (entrevistaId) navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ token, email: authorizedUser?.email ?? null, action: "leave" }));
       setShowRatingModal(true);
     } else {
       if (feedbackSentRef.current && entrevistaId) {
@@ -1450,7 +1458,7 @@ function MeetingRoomInner() {
         )}
 
         {/* Feedback sidebar — only visible to mentor */}
-        {isMentor && <FeedbackSidebar entrevistaId={entrevistaId} onFeedbackSent={handleFeedbackSent} />}
+        {isMentor && <FeedbackSidebar entrevistaId={entrevistaId} meetingToken={token} userEmail={authorizedUser?.email ?? null} onFeedbackSent={handleFeedbackSent} />}
 
         {/* Jitsi call area */}
         <div style={{ flex: 1, position: "relative", background: "#ffffffff", minWidth: 0 }}>
@@ -1685,7 +1693,7 @@ function MeetingRoomInner() {
 
               externalApi.addListener("videoConferenceLeft", () => {
                 if (!isMentor) {
-                   if (entrevistaId) navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ entrevistaId, action: "leave" }));
+                   if (entrevistaId) navigator.sendBeacon("/api/meetings/attendance", JSON.stringify({ token, email: authorizedUser?.email ?? null, action: "leave" }));
                    if (jitsiApiRef.current) {
                       jitsiApiRef.current.dispose();
                       jitsiApiRef.current = null;
@@ -1712,9 +1720,11 @@ function MeetingRoomInner() {
       </div>
       
       {showRatingModal && (
-        <CandidateRatingModal 
-          entrevistaId={entrevistaId} 
-          onSubmit={() => router.push("/")} 
+        <CandidateRatingModal
+          entrevistaId={entrevistaId}
+          meetingToken={token}
+          userEmail={authorizedUser?.email ?? null}
+          onSubmit={() => router.push("/")}
         />
       )}
     </div>

@@ -1,14 +1,23 @@
 import { NextResponse } from 'next/server';
+import { authorizeMeetingParticipant } from '@/lib/meeting-authz';
 
 export async function POST(request: Request) {
     try {
-        const { profile, feedback, language } = await request.json();
+        const { profile, feedback, language, token, email } = await request.json();
 
         if (!profile || !feedback) {
             return NextResponse.json(
                 { error: 'profile and feedback are required' },
                 { status: 400 }
             );
+        }
+
+        const authz = await authorizeMeetingParticipant(token, email);
+        if (!authz.authorized) {
+            return NextResponse.json({ error: authz.reason }, { status: authz.status });
+        }
+        if (!authz.isMentor) {
+            return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 });
         }
 
         const aiUrl = process.env.FEEDBACK_ANALYSIS_AI;

@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAuthorizedSyncRequest } from "@/lib/sync-auth";
 
 const APP_ID = process.env.APP_ID;
 
 export async function POST(req: NextRequest) {
+  if (!isAuthorizedSyncRequest(req)) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
     const { usuario_id, titulo } = body as { usuario_id?: string; titulo?: string };
@@ -65,6 +70,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  if (!isAuthorizedSyncRequest(req)) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const usuario_id = searchParams.get("usuario_id");
 

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeMeetingParticipant } from "@/lib/meeting-authz";
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { entrevistaId, feedback_comportamental, feedback_tecnico, feedback_geral, nota_comportamental, nota_tecnica, nota_geral } = body as {
-            entrevistaId?: string;
+        const { token, email, feedback_comportamental, feedback_tecnico, feedback_geral, nota_comportamental, nota_tecnica, nota_geral } = body as {
+            token?: string;
+            email?: string;
             feedback_comportamental?: string;
             feedback_tecnico?: string;
             feedback_geral?: string;
@@ -13,9 +15,19 @@ export async function POST(req: NextRequest) {
             nota_geral?: number;
         };
 
-        if (!entrevistaId) {
-            return NextResponse.json({ error: "entrevistaId é obrigatório." }, { status: 400 });
+        const authz = await authorizeMeetingParticipant(token, email);
+        if (!authz.authorized) {
+            return NextResponse.json({ error: authz.reason }, { status: authz.status });
         }
+        if (!authz.isMentor) {
+            return NextResponse.json({ error: "Apenas o mentor pode enviar o feedback." }, { status: 403 });
+        }
+
+        const entrevistaId = authz.entrevistaId;
+        if (!entrevistaId) {
+            return NextResponse.json({ error: "Reunião sem entrevista vinculada." }, { status: 400 });
+        }
+
         if (!feedback_comportamental?.trim()) {
             return NextResponse.json({ error: "Feedback Comportamental é obrigatório." }, { status: 400 });
         }

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAuthorizedSyncRequest } from "@/lib/sync-auth";
 
 export async function GET(req: NextRequest) {
+  if (!isAuthorizedSyncRequest(req)) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const tipo = searchParams.get("tipo");
   const page = Math.max(1, Number(searchParams.get("page") || "1"));
@@ -22,6 +27,21 @@ export async function GET(req: NextRequest) {
       orderBy: { sincronizado_em: "desc" },
       skip: offset,
       take: limit,
+      select: {
+        id: true,
+        usuario_id: true,
+        email: true,
+        nome: true,
+        sobrenome: true,
+        tipo: true,
+        foto_perfil: true,
+        cidade: true,
+        estado: true,
+        pais: true,
+        bio_descricao: true,
+        sincronizado_em: true,
+        atualizado_em: true,
+      },
     });
 
     return NextResponse.json({

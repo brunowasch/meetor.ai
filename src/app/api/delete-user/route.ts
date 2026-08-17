@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-const SYNC_SECRET = process.env.SYNC_SECRET;
+import { isAuthorizedSyncRequest } from "@/lib/sync-auth";
 
 export async function POST(req: NextRequest) {
   // 1. Validar chave de segurança
-  const authHeader = req.headers.get("x-sync-secret");
-  if (!SYNC_SECRET || authHeader !== SYNC_SECRET) {
+  if (!isAuthorizedSyncRequest(req)) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
