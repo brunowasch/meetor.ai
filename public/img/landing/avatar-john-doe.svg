@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="John Doe">
+  <title>John Doe</title>
+  <!-- Fundo -->
+  <rect width="120" height="120" fill="#EAF4FC"/>
+  <!-- Camisa -->
+  <path d="M18 120c2-24 18-36 42-36s40 12 42 36z" fill="#15447C"/>
+  <!-- Gola -->
+  <path d="M48 86l12 14 12-14-6-4H54z" fill="#F4F6FA"/>
+  <!-- Pescoço -->
+  <path d="M52 70h16v16c0 4-4 7-8 7s-8-3-8-7z" fill="#C98E6B"/>
+  <!-- Orelhas -->
+  <ellipse cx="38.5" cy="54" rx="4.5" ry="7" fill="#D9A07C"/>
+  <ellipse cx="81.5" cy="54" rx="4.5" ry="7" fill="#D9A07C"/>
+  <!-- Rosto -->
+  <rect x="39" y="28" width="42" height="50" rx="20" fill="#E3AE8A"/>
+  <!-- Cabelo -->
+  <path d="M38 50c-2-18 8-30 23-30 13 0 22 7 22 20v8c-3-6-8-10-15-11-9-1-17-4-21-9-3 6-6 13-9 22z" fill="#2B2420"/>
+  <!-- Sobrancelhas -->
+  <path d="M48 47h8M64 47h8" stroke="#2B2420" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- Olhos -->
+  <circle cx="52" cy="54" r="2.4" fill="#1F1A17"/>
+  <circle cx="68" cy="54" r="2.4" fill="#1F1A17"/>
+  <!-- Nariz -->
+  <path d="M60 56v7l-3 1.5" fill="none" stroke="#C48866" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Sorriso -->
+  <path d="M53 68c4 4 10 4 14 0" fill="none" stroke="#9A5B43" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

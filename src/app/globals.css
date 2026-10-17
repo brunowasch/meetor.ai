@@ -324,3 +324,35 @@ body {
   animation: shimmer 1.4s infinite;
   border-radius: var(--radius-sm);
 }
+
+
+/* ─── Landing page ─────────────────────────────────────────────── */
+
+@theme {
+  --color-meetor-ink: #2C4252;
+  --color-meetor-ink-dark: #213342;
+  --color-meetor-cyan: #1DB5DA;
+  --color-meetor-cyan-dark: #1590AE;
+  --color-meetor-mist: #E8F9FC;
+  --color-meetor-surface: #F5F7F9;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

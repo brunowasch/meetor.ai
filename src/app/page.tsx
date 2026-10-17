@@ -2,9 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Target, Sparkles, LogIn, X, LogOut, User } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { LanguageSwitcher } from "./_components/LanguageSwitcher";
+import { Header, type LandingUser } from "./_components/Landing/Header";
+import { Hero } from "./_components/Landing/Hero";
+import { HowItWorks } from "./_components/Landing/HowItWorks";
+import { Features } from "./_components/Landing/Features";
+import { Audiences } from "./_components/Landing/Audiences";
+import { Ecosystem } from "./_components/Landing/Ecosystem";
+import { Faq } from "./_components/Landing/Faq";
+import { FinalCta } from "./_components/Landing/FinalCta";
+import { Footer } from "./_components/Landing/Footer";
+
+const CONNECT_SKILLS_URL = process.env.NEXT_PUBLIC_CONNECT_SKILLS_URL || "http://localhost:3000";
+const SIGN_UP_URL = "/api/auth/register";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -13,7 +24,7 @@ export default function LandingPage() {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [joinLink, setJoinLink] = useState("");
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<LandingUser | null>(null);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -53,7 +64,6 @@ export default function LandingPage() {
     if (!joinLink.trim()) return;
     const url = joinLink.trim();
     // Extrai o token se for link completo ou usa o próprio texto se for só o token
-    // deploy
     const tokenStr = url.includes("/meeting/") ? url.split("/meeting/")[1].split(/[/?#]/)[0] : url.split(/[/?#]/)[0];
     router.push(`/meeting/${tokenStr}`);
   };
@@ -67,244 +77,128 @@ export default function LandingPage() {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
     const token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-    
+
     router.push(`/meeting/${token}?host=true`);
   };
 
+  const openJoin = () => setJoinModalOpen(true);
+
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: "rgba(255,255,255,0.95)",
-          backdropFilter: "blur(16px)",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <div className="container" style={{ display: "flex", alignItems: "center", height: 100, justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <img 
-              src="/logos/mentor.ai.png" 
-              alt="Mentor AI" 
-              style={{ height: 100, width: "auto", objectFit: "contain" }} 
-            />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {currentUser ? (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 20, background: "var(--primary-50)", border: "1px solid var(--primary-200)" }}>
-                  {currentUser.foto_perfil ? (
-                    <img 
-                      src={currentUser.foto_perfil} 
-                      alt="Foto de perfil" 
-                      style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} 
-                    />
-                  ) : (
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #1DB5DA, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <User size={14} color="white" />
-                    </div>
-                  )}
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--primary)" }}>
-                    {[currentUser.nome, currentUser.sobrenome].filter(Boolean).join(" ") || currentUser.email}
-                    {currentUser.tipo && ` - ${currentUser.tipo.charAt(0).toUpperCase() + currentUser.tipo.slice(1).toLowerCase()}`}
-                  </span>
-                </div>
-                <LanguageSwitcher />
-                <button
-                  onClick={() => setLogoutModalOpen(true)}
-                  className="btn btn-ghost btn-sm"
-                  style={{ borderRadius: 20, padding: "6px 12px", color: "var(--text-muted)" }}
-                  title={t('landing.logout')}
-                >
-                  <LogOut size={15} />
-                  {t('landing.logout')}
-                </button>
-              </>
-            ) : (
-              <>
-                <LanguageSwitcher />
-                <button
-                  onClick={() => router.push('/login')}
-                  className="btn btn-secondary btn-sm"
-                  style={{ borderRadius: "20px", padding: "8px 16px" }}
-                >
-                  <LogIn size={16} />
-                  {t('landing.login')}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-white">
+      <Header
+        currentUser={currentUser}
+        onLogin={() => router.push("/login")}
+        onLogout={() => setLogoutModalOpen(true)}
+        onCreateMeeting={handleCreateMeeting}
+      />
 
-      <section
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          overflow: "hidden",
-          paddingTop: 100,
-        }}
-      >
-        <div style={{ textAlign: "center", zIndex: 10 }}>
-          <h1
-            style={{
-              fontSize: "clamp(36px, 6vw, 72px)",
-              fontWeight: 900,
-              lineHeight: 1.1,
-              letterSpacing: "-2px",
-              marginBottom: 24,
-              color: "var(--text)",
-            }}
-          >
-            {t('landing.title1')} <br/>
-            <span
-              style={{
-                backgroundImage: "linear-gradient(135deg, #1DB5DA, #06b6d4)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                color: "transparent",
-              }}
-            >
-              {t('landing.title2')}
-            </span>
-          </h1>
+      <main>
+        <Hero loading={loading} onCreateMeeting={handleCreateMeeting} onJoinMeeting={openJoin} />
+        <HowItWorks />
+        <Features />
+        <Audiences signUpUrl={SIGN_UP_URL} connectSkillsUrl={CONNECT_SKILLS_URL} />
+        <Ecosystem connectSkillsUrl={CONNECT_SKILLS_URL} />
+        <Faq />
+        <FinalCta loading={loading} onCreateMeeting={handleCreateMeeting} onJoinMeeting={openJoin} />
+      </main>
 
-          <p
-            style={{
-              fontSize: "clamp(16px, 2vw, 20px)",
-              color: "var(--text-muted)",
-              maxWidth: 600,
-              margin: "0 auto 40px",
-              lineHeight: 1.7,
-            }}
-          >
-            {t('landing.subtitle')}
-          </p>
-
-          <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-            <button
-              onClick={handleCreateMeeting}
-              disabled={loading}
-              className="btn btn-primary btn-lg"
-              style={{ fontSize: 18, padding: "16px 32px", borderRadius: 32, boxShadow: "0 8px 20px rgba(37,99,235,0.3)" }}
-            >
-              {loading ? t('landing.generating') : (
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Sparkles size={20} />
-                  {t('landing.createMeeting')}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setJoinModalOpen(true)}
-              className="btn btn-secondary btn-lg"
-              style={{ fontSize: 18, padding: "16px 32px", borderRadius: 32 }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <LogIn size={20} />
-                {t('landing.joinWithLink')}
-              </span>
-            </button>
-          </div>
-        </div>
-      </section>
+      <Footer signUpUrl={SIGN_UP_URL} connectSkillsUrl={CONNECT_SKILLS_URL} />
 
       {joinModalOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }} className="animate-fade-in">
-          <div style={{ background: "var(--surface)", padding: 32, borderRadius: 24, width: "100%", maxWidth: 460, boxShadow: "0 24px 48px rgba(0,0,0,0.2)", position: "relative" }}>
-            <button onClick={() => setJoinModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
-              <X size={24} />
+        <Modal onClose={() => setJoinModalOpen(false)}>
+          <h2 className="text-2xl font-bold text-slate-900">{t("landing.joinModal.title")}</h2>
+          <p className="mt-2 mb-6 text-slate-600">{t("landing.joinModal.desc")}</p>
+          <form onSubmit={handleJoinMeeting} className="flex flex-col gap-4">
+            <input
+              type="text"
+              placeholder={t("landing.joinModal.placeholder")}
+              value={joinLink}
+              onChange={(e) => setJoinLink(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 outline-none focus:border-meetor-ink"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-meetor-ink py-4 font-semibold text-white transition-colors hover:bg-meetor-ink-dark cursor-pointer"
+            >
+              {t("landing.joinModal.button")}
             </button>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{t('landing.joinModal.title')}</h2>
-            <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
-              {t('landing.joinModal.desc')}
-            </p>
-            <form onSubmit={handleJoinMeeting} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <input 
-                type="text" 
-                placeholder={t('landing.joinModal.placeholder')} 
-                value={joinLink}
-                onChange={(e) => setJoinLink(e.target.value)}
-                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 16, outline: "none" }}
-                autoFocus
-              />
-              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: 16, borderRadius: 12, fontSize: 16, fontWeight: 600 }}>
-                {t('landing.joinModal.button')}
-              </button>
-            </form>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
 
       {logoutModalOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }} className="animate-fade-in">
-          <div style={{ background: "var(--surface)", padding: 32, borderRadius: 24, width: "100%", maxWidth: 400, boxShadow: "0 24px 48px rgba(0,0,0,0.2)", position: "relative", textAlign: "center" }}>
-            <button onClick={() => setLogoutModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
-              <X size={24} />
+        <Modal onClose={() => setLogoutModalOpen(false)} centered>
+          <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+            <LogOut className="h-7 w-7 text-red-600" />
+          </span>
+          <h2 className="text-2xl font-bold text-slate-900">{t("landing.logoutModal.title")}</h2>
+          <p className="mt-2 mb-6 text-slate-600">{t("landing.logoutModal.desc")}</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setLogoutModalOpen(false)}
+              className="flex-1 rounded-xl border border-slate-300 py-3.5 font-semibold text-slate-700 cursor-pointer"
+            >
+              {t("landing.logoutModal.cancel")}
             </button>
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#fee2e2", marginBottom: 16 }}>
-              <LogOut size={28} color="#dc2626" />
-            </div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{t('landing.logoutModal.title')}</h2>
-            <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
-              {t('landing.logoutModal.desc')}
-            </p>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-              <button onClick={() => setLogoutModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600 }}>
-                {t('landing.logoutModal.cancel')}
-              </button>
-              <button 
-                onClick={() => {
-                  handleLogout();
-                  setLogoutModalOpen(false);
-                }} 
-                style={{ flex: 1, padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600, background: "#dc2626", color: "white", border: "none", cursor: "pointer" }}
-              >
-                {t('landing.logoutModal.confirm')}
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                handleLogout();
+                setLogoutModalOpen(false);
+              }}
+              className="flex-1 rounded-xl bg-red-600 py-3.5 font-semibold text-white transition-colors hover:bg-red-700 cursor-pointer"
+            >
+              {t("landing.logoutModal.confirm")}
+            </button>
           </div>
-        </div>
+        </Modal>
       )}
 
       {registerModalOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }} className="animate-fade-in">
-          <div style={{ background: "var(--surface)", padding: 32, borderRadius: 24, width: "100%", maxWidth: 400, boxShadow: "0 24px 48px rgba(0,0,0,0.2)", position: "relative", textAlign: "center" }}>
-            <button onClick={() => setRegisterModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
-              <X size={24} />
+        <Modal onClose={() => setRegisterModalOpen(false)} centered>
+          <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-meetor-mist">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.png" alt="Connect Skills" className="h-8 w-8 object-contain" />
+          </span>
+          <h2 className="text-2xl font-bold text-slate-900">{t("landing.registerModal.title")}</h2>
+          <p className="mt-2 mb-6 text-slate-600">{t("landing.registerModal.desc")}</p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => {
+                window.location.href = SIGN_UP_URL;
+              }}
+              className="w-full rounded-xl bg-meetor-ink py-3.5 font-semibold text-white transition-colors hover:bg-meetor-ink-dark cursor-pointer"
+            >
+              {t("landing.registerModal.button")}
             </button>
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#e0f2fe", marginBottom: 16 }}>
-              <img src="/icon.png" alt="Connect Skills" style={{ width: 32, height: 32, objectFit: "contain" }} />
-            </div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{t('landing.registerModal.title')}</h2>
-            <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
-              {t('landing.registerModal.desc')}
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", justifyContent: "center" }}>
-              <button 
-                onClick={() => {
-                  window.location.href = "/api/auth/register";
-                }} 
-                style={{ width: "100%", padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600, background: "var(--primary)", color: "white", border: "none", cursor: "pointer" }}
-              >
-                {t('landing.registerModal.button')}
-              </button>
-              <button onClick={() => setRegisterModalOpen(false)} className="btn btn-secondary" style={{ width: "100%", padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 600 }}>
-                {t('landing.registerModal.cancel')}
-              </button>
-            </div>
+            <button
+              onClick={() => setRegisterModalOpen(false)}
+              className="w-full rounded-xl border border-slate-300 py-3.5 font-semibold text-slate-700 cursor-pointer"
+            >
+              {t("landing.registerModal.cancel")}
+            </button>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
 }
 
+function Modal({ children, onClose, centered = false }: { children: React.ReactNode; onClose: () => void; centered?: boolean }) {
+  return (
+    <div
+      className="animate-fade-in fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 px-4"
+      onClick={onClose}
+    >
+      <div
+        className={`relative w-full max-w-[460px] rounded-3xl bg-white p-8 ${centered ? "text-center" : ""}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} aria-label="Fechar" className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer">
+          <X className="h-6 w-6" />
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
